@@ -8,10 +8,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { BlogCard } from '@/components/BlogCard'
+import { blogPosts } from '@/data/blogPosts'
 
 const categories = ['Highlight', 'Cat', 'Inspiration', 'General']
 
-function ArticleSection() {
+export function ArticleSection() {
   return (
     <section className="px-6 py-12 lg:px-30">
       <h2 className="mb-6 text-2xl font-bold text-[#26231E]">Latest articles</h2>
@@ -57,12 +59,24 @@ function ArticleSection() {
                   {category}
                 </SelectItem>
               ))}
-            </SelectContent>
-          </Select>
+          </SelectContent>
+        </Select>
         </div>
+      </div>
+
+      <div className="mt-8 grid grid-cols-1 gap-x-5 gap-y-12 md:grid-cols-2">
+        {blogPosts.map((post) => (
+          <BlogCard
+            key={post.id}
+            image={post.image}
+            category={post.category}
+            title={post.title}
+            description={post.description}
+            author={post.author}
+            date={post.date}
+          />
+        ))}
       </div>
     </section>
   )
 }
-
-export default ArticleSection
