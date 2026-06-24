@@ -11,7 +11,7 @@ import {
 import { BlogCard } from '@/components/BlogCard'
 import { blogPosts } from '@/data/blogPosts'
 
-const categories = ['Highlight', 'Cat', 'Inspiration', 'General']
+const categories = ['Highlight', 'Taylor Swift', 'Disney', 'Movies']
 
 export function ArticleSection() {
   return (
@@ -68,7 +68,9 @@ export function ArticleSection() {
         {blogPosts.map((post) => (
           <BlogCard
             key={post.id}
+            id={post.id}
             image={post.image}
+            imagePosition={post.imagePosition}
             category={post.category}
             title={post.title}
             description={post.description}
