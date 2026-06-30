@@ -8,7 +8,7 @@ export const blogPosts = [
     title: "How Taylor Swift's folklore Turned Isolation into Art",
     description:
       "A deep dive into the quiet, misty world of folklore—an album that traded the bright lights of stadium pop for the soft, healing philosophy of storytelling and imagination.",
-    author: "Thompson P.",
+    author: "Sujaree S.",
     date: "24 June 2026",
     likes: 321,
     content: `There is a specific kind of magic that only happens when the world goes completely quiet. For many of us, that quiet arrived unexpectedly during the lockdowns of 2020. But out of that heavy, global silence, Taylor Swift created something that felt less like an album and more like a soft blanket for the soul: *folklore*.
@@ -53,7 +53,7 @@ Sometimes, the most creative thing you can do is sit quietly in the woods of you
       "How Taylor Swift's Lover Taught Us to Celebrate the Messiness of Light",
     description:
       "An exploration of the soft, watercolor world of Lover—an album that bravely chose warmth, vulnerability, and daylight after a long season in the shadows.",
-    author: "Thompson P.",
+    author: "Sujaree S.",
     date: "21 August 2024",
     likes: 123,
     content: `There is a beautiful moment right at the end of a long, heavy storm when the clouds finally break. The sky doesn't just turn blue immediately; it fills with soft pinks, warm golds, and gentle blues. It is the color of pure relief. If Taylor Swift's previous work was a defensive shield built in the dark, then *Lover* is the act of stepping outside, barefoot, to feel the morning sun.
@@ -92,7 +92,7 @@ It leaves us with a comforting philosophy that serves as a beautiful guide for o
       "The Midnight Mirror: How Taylor Swift's Midnights Taught Us to Befriend Our Darkest Hours",
     description:
       "An exploration of the shimmering, late-night philosophy of Midnights—an album that looks into the clock at 12:00 AM and finds that our deepest insecurities can become our greatest art.",
-    author: "Thompson P.",
+    author: "Sujaree S.",
     date: "23 March 2024",
     likes: 21,
     content: `There is a unique shift that happens to the human mind when the rest of the world goes to sleep. The distractions of the day fade away, the noise stops, and we are left completely alone with ourselves. In those quiet hours, the bedroom walls seem to shrink, and our thoughts become incredibly loud. This is the emotional landscape of Taylor Swift's *Midnights*. It is not an album about the sleep we get, but about the awake states we endure when we cannot escape our own minds.
@@ -131,7 +131,7 @@ It leaves us with a comforting thought to hold onto when we face our own sleeple
       "The Winter of the Soul: How Taylor Swift's evermore Taught Us the Art of Staying Broken",
     description:
       "A deep dive into the freezing, mossy universe of evermore—an album that walked past the cozy safety of the cabin and dared to stand alone in the numbing, beautiful reality of grief.",
-    author: "Thompson P.",
+    author: "Sujaree S.",
     date: "23 May 2024",
     likes: 32,
     content: `If its sister album, *folklore*, felt like finding a safe sanctuary inside a quiet wooden cabin during a storm, then *evermore* is the act of opening the front door and walking straight out into the freezing, gray winter. It is an album that doesn't just visit sadness; it wraps its arms around the cold and decides to live there for a while. It represents a gorgeous, grounding philosophy: the realization that some things in life cannot be neatly fixed, healed, or polished. Some things just stay broken, and there is a strange, quiet dignity in learning how to survive within that wreckage.
@@ -168,7 +168,7 @@ It leaves us with a hauntingly beautiful perspective to carry into our own lives
       "The Mirror of the Wooden Boy: What Disney's Pinocchio Teaches Us About the Burden of Becoming Real",
     description:
       "A philosophical look at a childhood classic, exploring how a puppet's journey to becoming a \"real boy\" is actually a beautiful, sometimes terrifying metaphor for our own human struggle to find truth and conscience.",
-    author: "Thompson P.",
+    author: "Sujaree S.",
     date: "23 June 2024",
     likes: 515,
     content: `Most of us remember Disney's *Pinocchio* as a cautionary tale about a wooden puppet whose nose grows longer whenever he tells a lie. We remember the cheerful cricket, the terrifying whale, and the magical blue fairy who makes wishes come true. But if you look past the colorful animation and the nostalgic songs, you find one of the deepest philosophical roadmaps ever created for the human experience. It is not just a story about a puppet wanting to be human; it is an exploration of how incredibly difficult it is for any of us to become truly "real."
@@ -205,7 +205,7 @@ Ultimately, *Pinocchio* leaves us with a comforting yet challenging philosophy t
       "The Flavor of Destiny: How Disney's Ratatouille Taught Us to Defy Our Ingredients",
     description:
       "A thoughtful exploration of a modern masterpiece, showing how a little rat's passion for cooking reveals the true meaning of genius, legacy, and the courage to rewrite our own beginnings.",
-    author: "Thompson P.",
+    author: "Sujaree S.",
     date: "21 July 2024",
     likes: 555,
     content: `There is a profound difference between existing in the world and truly tasting it. Most of the time, we move through our lives out of pure habit—eating just to stay full, working just to survive, and staying inside the safe, predictable boundaries that society has drawn for us. But Disney's *Ratatouille* presents us with a beautiful, radical question: What happens when the thing you were born to be clashes completely with the thing you desperately want to create? Through the eyes of Remy, a small rat with a genius sense of smell, we are invited to look at our own lives and ask whether we are living out of fear or out of passion.

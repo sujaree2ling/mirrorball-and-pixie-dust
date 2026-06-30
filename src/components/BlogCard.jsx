@@ -28,7 +28,7 @@ export function BlogCard(props) {
         <div className="flex items-center text-sm">
           <img
             className="w-8 h-8 rounded-full mr-2"
-            src="https://res.cloudinary.com/dcbpjtd1r/image/upload/v1728449784/my-blog-post/xgfy0xnvyemkklcqodkg.jpg"
+            src="/author-icon.jpg"
             alt={props.author}
           />
           <span>{props.author}</span>
