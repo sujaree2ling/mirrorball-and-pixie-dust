@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Search } from 'lucide-react'
 
 import { Input } from '@/components/ui/input'
@@ -14,20 +15,28 @@ import { blogPosts } from '@/data/blogPosts'
 const categories = ['Highlight', 'Taylor Swift', 'Disney', 'Movies']
 
 export function ArticleSection() {
+  const [selectedCategory, setSelectedCategory] = useState('Highlight')
+
+  const filteredPosts =
+    selectedCategory === 'Highlight'
+      ? blogPosts
+      : blogPosts.filter((post) => post.category === selectedCategory)
+
   return (
     <section className="px-6 py-12 lg:px-30">
       <h2 className="mb-6 text-2xl font-bold text-[#26231E]">Latest articles</h2>
 
       <div className="flex flex-col gap-4 rounded-2xl bg-[#EFEEEB] px-4 py-5 lg:flex-row lg:items-center lg:justify-between lg:py-4">
         <div className="hidden items-center gap-2 lg:flex">
-          {categories.map((category, index) => (
+          {categories.map((category) => (
             <button
               key={category}
               type="button"
+              onClick={() => setSelectedCategory(category)}
               className={
-                index === 0
+                category === selectedCategory
                   ? 'cursor-pointer rounded-lg bg-[#DAD6D1] px-5 py-3 text-base font-medium text-[#43403B]'
-                  : 'cursor-pointer rounded-lg px-5 py-3 text-base font-medium text-[#75716B] transition-colors hover:bg-[#DAD6D1]/60'
+                  : 'cursor-pointer rounded-lg px-5 py-3 text-base font-medium text-[#75716B] transition-colors hover:bg-white'
               }
             >
               {category}
@@ -49,7 +58,7 @@ export function ArticleSection() {
 
         <div className="flex flex-col gap-1.5 lg:hidden">
           <label className="text-base font-medium text-[#75716B]">Category</label>
-          <Select defaultValue="Highlight">
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
             <SelectTrigger className="h-12! w-full rounded-lg border-[#DAD6D1] bg-white px-3 text-base [&_svg:not([class*='size-'])]:size-5">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
@@ -65,7 +74,7 @@ export function ArticleSection() {
       </div>
 
       <div className="mt-8 grid grid-cols-1 gap-x-5 gap-y-12 md:grid-cols-2">
-        {blogPosts.map((post) => (
+        {filteredPosts.map((post) => (
           <BlogCard
             key={post.id}
             id={post.id}
