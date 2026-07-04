@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Search } from 'lucide-react'
 
 import { Input } from '@/components/ui/input'
@@ -13,14 +13,55 @@ import { BlogCard } from '@/components/BlogCard'
 import { blogPosts } from '@/data/blogPosts'
 
 const categories = ['Highlight', 'Taylor Swift', 'Disney', 'Movies']
+const POSTS_PER_PAGE = 6
+
+function getFilteredPosts(category) {
+  return category === 'Highlight'
+    ? blogPosts
+    : blogPosts.filter((post) => post.category === category)
+}
 
 export function ArticleSection() {
   const [selectedCategory, setSelectedCategory] = useState('Highlight')
+  const [posts, setPosts] = useState([])
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
 
-  const filteredPosts =
-    selectedCategory === 'Highlight'
-      ? blogPosts
-      : blogPosts.filter((post) => post.category === selectedCategory)
+  const fetchPosts = async (pageNum, category) => {
+    setIsLoading(true)
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 400))
+
+      const filtered = getFilteredPosts(category)
+      const startIndex = (pageNum - 1) * POSTS_PER_PAGE
+      const nextPosts = filtered.slice(startIndex, startIndex + POSTS_PER_PAGE)
+
+      setPosts((prevPosts) =>
+        pageNum === 1 ? nextPosts : [...prevPosts, ...nextPosts],
+      )
+      setPage(pageNum)
+
+      const totalPages = Math.ceil(filtered.length / POSTS_PER_PAGE) || 1
+      setHasMore(pageNum < totalPages)
+    } catch (error) {
+      console.error('Error fetching posts:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    setPosts([])
+    setPage(1)
+    setHasMore(true)
+    fetchPosts(1, selectedCategory)
+  }, [selectedCategory])
+
+  const handleLoadMore = () => {
+    fetchPosts(page + 1, selectedCategory)
+  }
 
   return (
     <section className="px-6 py-12 lg:px-30">
@@ -82,7 +123,7 @@ export function ArticleSection() {
       </div>
 
       <div className="mt-8 grid grid-cols-1 gap-x-5 gap-y-12 md:grid-cols-2">
-        {filteredPosts.map((post) => (
+        {posts.map((post) => (
           <BlogCard
             key={post.id}
             id={post.id}
@@ -96,6 +137,19 @@ export function ArticleSection() {
           />
         ))}
       </div>
+
+      {hasMore && (
+        <div className="mt-8 text-center">
+          <button
+            type="button"
+            onClick={handleLoadMore}
+            className="font-medium underline hover:text-muted-foreground"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Loading...' : 'View more'}
+          </button>
+        </div>
+      )}
     </section>
   )
 }
