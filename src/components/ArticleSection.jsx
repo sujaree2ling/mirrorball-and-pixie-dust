@@ -32,10 +32,11 @@ export function ArticleSection() {
             <button
               key={category}
               type="button"
+              disabled={category === selectedCategory}
               onClick={() => setSelectedCategory(category)}
               className={
                 category === selectedCategory
-                  ? 'cursor-pointer rounded-lg bg-[#DAD6D1] px-5 py-3 text-base font-medium text-[#43403B]'
+                  ? 'cursor-default rounded-lg bg-[#DAD6D1] px-5 py-3 text-base font-medium text-[#43403B] disabled:opacity-100'
                   : 'cursor-pointer rounded-lg px-5 py-3 text-base font-medium text-[#75716B] transition-colors hover:bg-white'
               }
             >
