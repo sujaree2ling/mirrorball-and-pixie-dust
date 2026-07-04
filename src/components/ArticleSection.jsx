@@ -44,32 +44,39 @@ export function ArticleSection() {
           ))}
         </div>
 
-        <div className="relative w-full lg:w-[360px]">
-          <Input
-            type="text"
-            placeholder="Search"
-            className="h-12 rounded-lg border-[#DAD6D1] bg-white pr-10 text-base"
-          />
-          <Search
-            size={20}
-            className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[#75716B]"
-          />
-        </div>
+        <div className="flex w-full flex-col gap-4 lg:w-[360px] lg:flex-none">
+          <div className="relative w-full">
+            <Input
+              type="text"
+              placeholder="Search"
+              className="h-12 rounded-lg border-[#DAD6D1] bg-white pr-10 text-base"
+            />
+            <Search
+              size={20}
+              className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[#75716B]"
+            />
+          </div>
 
-        <div className="flex flex-col gap-1.5 lg:hidden">
-          <label className="text-base font-medium text-[#75716B]">Category</label>
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="h-12! w-full rounded-lg border-[#DAD6D1] bg-white px-3 text-base [&_svg:not([class*='size-'])]:size-5">
+            <SelectTrigger className="h-12! w-full rounded-lg border-[#DAD6D1] bg-white px-3 text-base text-[#43403B] lg:hidden [&_svg:not([class*='size-'])]:size-5">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent
+              position="popper"
+              sideOffset={4}
+              className="w-[var(--radix-select-trigger-width)] rounded-lg border border-[#DAD6D1] bg-white p-2 shadow-md lg:hidden"
+            >
               {categories.map((category) => (
-                <SelectItem key={category} value={category} className="text-base">
+                <SelectItem
+                  key={category}
+                  value={category}
+                  className="rounded-lg py-3 pl-8 text-base text-[#43403B] focus:bg-[#EFEEEB] data-highlighted:bg-[#EFEEEB]"
+                >
                   {category}
                 </SelectItem>
               ))}
-          </SelectContent>
-        </Select>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
