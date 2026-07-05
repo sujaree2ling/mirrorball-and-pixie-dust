@@ -61,32 +61,26 @@ function LikeIcon() {
   )
 }
 
-function TwitterIcon({ size = 16 }) {
+function FacebookIcon({ size = 18 }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden
-    >
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M14 8.5V6.75c0-.69.56-1.25 1.25-1.25H17V3h-2.75c-2.07 0-3.75 1.68-3.75 3.75V8.5H8.5v3h2v9.5h3.5v-9.5h2.38L17 8.5h-3z" />
+    </svg>
+  )
+}
+
+function LinkedInIcon({ size = 18 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 110-4.124 2.062 2.062 0 010 4.124zM7.119 20.452H3.555V9h3.564v11.452z" />
+    </svg>
+  )
+}
+
+function XIcon({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-    </svg>
-  )
-}
-
-function FacebookIcon({ size = 16 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M14 8.5V6.75c0-.69.56-1.25 1.25-1.25H17V2.5h-2.75c-2.07 0-3.75 1.68-3.75 3.75V8.5H8.5v3h2V21h3.5v-9.5h2.38L17 8.5h-3z" />
-    </svg>
-  )
-}
-
-function LinkedInIcon({ size = 16 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M6.5 8.5h3v10h-3v-10zm1.5-4.5a1.75 1.75 0 110 3.5 1.75 1.75 0 010-3.5zM10 8.5h2.88v1.36h.04c.4-.76 1.38-1.56 2.84-1.56 3.04 0 3.6 2 3.6 4.59V18.5h-3v-4.86c0-1.16-.02-2.65-1.62-2.65-1.76 0-2.03 1.37-2.03 2.79v4.72H10V8.5z" />
     </svg>
   )
 }
@@ -158,35 +152,34 @@ export function PostInteractions({ likes = 0 }) {
             className="inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full border border-[#26231E] bg-white px-4 py-2.5 text-sm font-medium text-[#26231E] transition-colors hover:bg-[#FAFAF9] sm:flex-none"
           >
             <Copy size={16} />
-            <span className="sm:hidden">Copy link</span>
-            <span className="hidden sm:inline">Copy</span>
+            Copy link
           </button>
 
           <button
             type="button"
             aria-label="Share on Facebook"
             onClick={() => handleShare('facebook')}
-            className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#1877F2] text-white transition-opacity hover:opacity-85 sm:border sm:border-[#26231E] sm:bg-white sm:text-[#26231E] sm:hover:bg-[#FAFAF9]"
+            className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#1877F2] text-white transition-opacity hover:opacity-85"
           >
-            <FacebookIcon size={16} />
+            <FacebookIcon />
           </button>
 
           <button
             type="button"
             aria-label="Share on LinkedIn"
             onClick={() => handleShare('linkedin')}
-            className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#0A66C2] text-white transition-opacity hover:opacity-85 sm:border sm:border-[#26231E] sm:bg-white sm:text-[#26231E] sm:hover:bg-[#FAFAF9]"
+            className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#0A66C2] text-white transition-opacity hover:opacity-85"
           >
-            <LinkedInIcon size={16} />
+            <LinkedInIcon />
           </button>
 
           <button
             type="button"
             aria-label="Share on X"
             onClick={() => handleShare('twitter')}
-            className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#1DA1F2] text-white transition-opacity hover:opacity-85 sm:border sm:border-[#26231E] sm:bg-white sm:text-[#26231E] sm:hover:bg-[#FAFAF9]"
+            className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#000000] text-white transition-opacity hover:opacity-85"
           >
-            <TwitterIcon size={14} />
+            <XIcon />
           </button>
         </div>
       </div>
