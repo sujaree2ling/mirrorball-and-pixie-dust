@@ -1,11 +1,13 @@
+import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Loader2 } from 'lucide-react'
 import Markdown from 'react-markdown'
 
+import { getPost } from '@/api/blogApi'
 import { NavBar } from '@/components/NavBar'
 import { Footer } from '@/components/Footer'
 import { PostInteractions } from '@/components/PostInteractions'
-import { blogPosts } from '@/data/blogPosts'
+import { formatDate } from '@/lib/formatDate'
 
 const markdownComponents = {
   h2: ({ children }) => (
@@ -32,9 +34,56 @@ function PostContent({ content }) {
 
 export function ViewPostPage() {
   const { id } = useParams()
-  const post = blogPosts.find((item) => String(item.id) === id)
+  const [post, setPost] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [notFound, setNotFound] = useState(false)
 
-  if (!post) {
+  useEffect(() => {
+    let cancelled = false
+
+    ;(async () => {
+      setIsLoading(true)
+      setNotFound(false)
+
+      try {
+        const data = await getPost(id)
+
+        if (cancelled) return
+
+        setPost({
+          ...data,
+          date: formatDate(data.date),
+        })
+      } catch (error) {
+        console.error('Failed to fetch post:', error)
+        if (!cancelled) {
+          setPost(null)
+          setNotFound(true)
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false)
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [id])
+
+  if (isLoading) {
+    return (
+      <>
+        <NavBar />
+        <main className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-20">
+          <Loader2 className="animate-spin text-[#26231E]" size={28} />
+          <p className="text-base text-[#75716B]">Loading...</p>
+        </main>
+        <Footer />
+      </>
+    )
+  }
+
+  if (notFound || !post) {
     return (
       <>
         <NavBar />
@@ -64,7 +113,6 @@ export function ViewPostPage() {
         <img
           src={post.image}
           alt={post.title}
-          style={{ objectPosition: post.imagePosition ?? 'center' }}
           className="mb-8 h-[260px] w-full rounded-2xl object-cover sm:h-[420px]"
         />
 

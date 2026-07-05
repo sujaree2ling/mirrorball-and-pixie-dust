@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Search } from 'lucide-react'
 
+import { getPosts } from '@/api/blogApi'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -10,57 +11,100 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { BlogCard } from '@/components/BlogCard'
-import { blogPosts } from '@/data/blogPosts'
+import { formatDate } from '@/lib/formatDate'
 
-const categories = ['Highlight', 'Taylor Swift', 'Disney', 'Movies']
+const categories = ['Highlight', 'Cat', 'Inspiration', 'General']
 const POSTS_PER_PAGE = 6
 
-function getFilteredPosts(category) {
-  return category === 'Highlight'
-    ? blogPosts
-    : blogPosts.filter((post) => post.category === category)
+function formatPosts(posts) {
+  return posts.map((post) => ({
+    ...post,
+    date: formatDate(post.date),
+  }))
+}
+
+function dedupePostsById(posts) {
+  const seen = new Set()
+
+  return posts.filter((post) => {
+    if (seen.has(post.id)) return false
+    seen.add(post.id)
+    return true
+  })
 }
 
 export function ArticleSection() {
   const [selectedCategory, setSelectedCategory] = useState('Highlight')
+  const [keyword, setKeyword] = useState('')
+  const [debouncedKeyword, setDebouncedKeyword] = useState('')
   const [posts, setPosts] = useState([])
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
   const [isLoading, setIsLoading] = useState(true)
+  const isLoadingMoreRef = useRef(false)
 
-  const fetchPosts = async (pageNum, category) => {
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedKeyword(keyword), 500)
+    return () => clearTimeout(timer)
+  }, [keyword])
+
+  useEffect(() => {
+    let cancelled = false
+    isLoadingMoreRef.current = false
+
+    ;(async () => {
+      try {
+        const data = await getPosts({
+          page: 1,
+          limit: POSTS_PER_PAGE,
+          category: selectedCategory === 'Highlight' ? '' : selectedCategory,
+          keyword: debouncedKeyword,
+        })
+
+        if (cancelled) return
+
+        setPosts(dedupePostsById(formatPosts(data.posts)))
+        setPage(data.currentPage)
+        setHasMore(data.currentPage < data.totalPages)
+      } catch (error) {
+        console.error('Error fetching posts:', error)
+      } finally {
+        if (!cancelled) setIsLoading(false)
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [selectedCategory, debouncedKeyword])
+
+  const handleLoadMore = async () => {
+    if (isLoading || isLoadingMoreRef.current || !hasMore) return
+
+    isLoadingMoreRef.current = true
     setIsLoading(true)
 
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 400))
+    const nextPage = page + 1
 
-      const filtered = getFilteredPosts(category)
-      const startIndex = (pageNum - 1) * POSTS_PER_PAGE
-      const nextPosts = filtered.slice(startIndex, startIndex + POSTS_PER_PAGE)
+    try {
+      const data = await getPosts({
+        page: nextPage,
+        limit: POSTS_PER_PAGE,
+        category: selectedCategory === 'Highlight' ? '' : selectedCategory,
+        keyword: debouncedKeyword,
+      })
 
       setPosts((prevPosts) =>
-        pageNum === 1 ? nextPosts : [...prevPosts, ...nextPosts],
+        dedupePostsById([...prevPosts, ...formatPosts(data.posts)]),
       )
-      setPage(pageNum)
-
-      const totalPages = Math.ceil(filtered.length / POSTS_PER_PAGE) || 1
-      setHasMore(pageNum < totalPages)
+      setPage(data.currentPage)
+      setHasMore(data.currentPage < data.totalPages)
     } catch (error) {
       console.error('Error fetching posts:', error)
     } finally {
+      isLoadingMoreRef.current = false
       setIsLoading(false)
     }
-  }
-
-  useEffect(() => {
-    setPosts([])
-    setPage(1)
-    setHasMore(true)
-    fetchPosts(1, selectedCategory)
-  }, [selectedCategory])
-
-  const handleLoadMore = () => {
-    fetchPosts(page + 1, selectedCategory)
   }
 
   return (
@@ -74,7 +118,10 @@ export function ArticleSection() {
               key={category}
               type="button"
               disabled={category === selectedCategory}
-              onClick={() => setSelectedCategory(category)}
+              onClick={() => {
+                setIsLoading(true)
+                setSelectedCategory(category)
+              }}
               className={
                 category === selectedCategory
                   ? 'cursor-default rounded-lg bg-[#DAD6D1] px-5 py-3 text-base font-medium text-[#43403B] disabled:opacity-100'
@@ -91,6 +138,8 @@ export function ArticleSection() {
             <Input
               type="text"
               placeholder="Search"
+              value={keyword}
+              onChange={(event) => setKeyword(event.target.value)}
               className="h-12 rounded-lg border-[#DAD6D1] bg-white pr-10 text-base"
             />
             <Search
@@ -99,7 +148,13 @@ export function ArticleSection() {
             />
           </div>
 
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+          <Select
+            value={selectedCategory}
+            onValueChange={(value) => {
+              setIsLoading(true)
+              setSelectedCategory(value)
+            }}
+          >
             <SelectTrigger className="h-12! w-full rounded-lg border-[#DAD6D1] bg-white px-3 text-base text-[#43403B] lg:hidden [&_svg:not([class*='size-'])]:size-5">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
@@ -128,7 +183,6 @@ export function ArticleSection() {
             key={post.id}
             id={post.id}
             image={post.image}
-            imagePosition={post.imagePosition}
             category={post.category}
             title={post.title}
             description={post.description}
