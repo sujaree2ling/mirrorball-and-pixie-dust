@@ -9,8 +9,8 @@ export function Footer() {
 
   return (
     <footer className="mt-auto border-t border-[#DAD6D1] bg-[#EFEEEB]">
-      <div className="flex flex-col items-center justify-between gap-6 px-6 py-10 sm:flex-row lg:px-30">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-6 px-6 py-10 lg:px-30">
+        <div className="flex w-full items-center justify-between">
           <span className="text-base font-medium text-[#26231E]">
             Get in touch
           </span>
@@ -30,7 +30,7 @@ export function Footer() {
 
         <a
           href="/"
-          className="text-base font-medium text-[#26231E] underline underline-offset-2 hover:opacity-80"
+          className="text-center text-base font-medium text-[#26231E] underline underline-offset-2 hover:opacity-80 sm:text-left"
         >
           Home page
         </a>

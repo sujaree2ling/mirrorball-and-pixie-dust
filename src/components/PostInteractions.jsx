@@ -11,6 +11,33 @@ import {
 
 const IS_LOGGED_IN = false
 
+const comments = [
+  {
+    id: 1,
+    author: 'Jacob Lash',
+    avatar: '/author-icon.jpg',
+    date: '12 September 2024 at 18:30',
+    content:
+      'I loved this article! It really captures how independent yet loving cats can be. The purring section was super interesting.',
+  },
+  {
+    id: 2,
+    author: 'Ahri',
+    avatar: '/author-icon.jpg',
+    date: '12 September 2024 at 18:30',
+    content:
+      "Such a great read. I've always wondered how cat slow blinks work as a sign of trust — this explained it perfectly.",
+  },
+  {
+    id: 3,
+    author: 'Mimi mama',
+    avatar: '/author-icon.jpg',
+    date: '12 September 2024 at 18:30',
+    content:
+      'Appreciated the section on cat purring and how it could help with healing. Definitely sharing this with friends who have cats!',
+  },
+]
+
 function LikeIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -118,27 +145,28 @@ export function PostInteractions({ likes = 0 }) {
           type="button"
           onClick={handleLike}
           aria-label={`Like post, ${likes} likes`}
-          className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-full border border-[#26231E] bg-white px-5 py-2.5 text-base font-medium text-[#26231E] transition-colors hover:bg-[#FAFAF9]"
+          className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-[#26231E] bg-white px-5 py-2.5 text-base font-medium text-[#26231E] transition-colors hover:bg-[#FAFAF9] sm:w-fit sm:justify-start"
         >
           <LikeIcon />
           {likes}
         </button>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={handleCopy}
-            className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[#26231E] bg-white px-4 py-2.5 text-sm font-medium text-[#26231E] transition-colors hover:bg-[#FAFAF9]"
+            className="inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full border border-[#26231E] bg-white px-4 py-2.5 text-sm font-medium text-[#26231E] transition-colors hover:bg-[#FAFAF9] sm:flex-none"
           >
             <Copy size={16} />
-            Copy
+            <span className="sm:hidden">Copy link</span>
+            <span className="hidden sm:inline">Copy</span>
           </button>
 
           <button
             type="button"
             aria-label="Share on Facebook"
             onClick={() => handleShare('facebook')}
-            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-[#26231E] bg-white text-[#26231E] transition-colors hover:bg-[#FAFAF9]"
+            className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#1877F2] text-white transition-opacity hover:opacity-85 sm:border sm:border-[#26231E] sm:bg-white sm:text-[#26231E] sm:hover:bg-[#FAFAF9]"
           >
             <FacebookIcon size={16} />
           </button>
@@ -147,7 +175,7 @@ export function PostInteractions({ likes = 0 }) {
             type="button"
             aria-label="Share on LinkedIn"
             onClick={() => handleShare('linkedin')}
-            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-[#26231E] bg-white text-[#26231E] transition-colors hover:bg-[#FAFAF9]"
+            className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#0A66C2] text-white transition-opacity hover:opacity-85 sm:border sm:border-[#26231E] sm:bg-white sm:text-[#26231E] sm:hover:bg-[#FAFAF9]"
           >
             <LinkedInIcon size={16} />
           </button>
@@ -156,7 +184,7 @@ export function PostInteractions({ likes = 0 }) {
             type="button"
             aria-label="Share on X"
             onClick={() => handleShare('twitter')}
-            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-[#26231E] bg-white text-[#26231E] transition-colors hover:bg-[#FAFAF9]"
+            className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#1DA1F2] text-white transition-opacity hover:opacity-85 sm:border sm:border-[#26231E] sm:bg-white sm:text-[#26231E] sm:hover:bg-[#FAFAF9]"
           >
             <TwitterIcon size={14} />
           </button>
@@ -165,7 +193,7 @@ export function PostInteractions({ likes = 0 }) {
 
       <section className="mt-8">
         <h2 className="mb-4 text-xl font-bold text-[#26231E]">Comment</h2>
-        <div className="relative rounded-xl border border-[#DAD6D1] bg-white p-4 pb-16">
+        <div className="rounded-xl border border-[#DAD6D1] bg-white p-4 sm:relative sm:pb-16">
           <textarea
             placeholder="What are your thoughts?"
             readOnly={!IS_LOGGED_IN}
@@ -176,11 +204,45 @@ export function PostInteractions({ likes = 0 }) {
           <button
             type="button"
             onClick={handleSend}
-            className="absolute right-4 bottom-4 cursor-pointer rounded-full border border-[#26231E] bg-[#26231E] px-6 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-85"
+            className="mt-4 cursor-pointer rounded-full border border-[#26231E] bg-[#26231E] px-6 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-85 sm:absolute sm:right-4 sm:bottom-4 sm:mt-0"
           >
             Send
           </button>
         </div>
+      </section>
+
+      <section className="mt-8">
+        <ul className="flex flex-col">
+          {comments.map((comment, index) => (
+            <li
+              key={comment.id}
+              className={
+                index < comments.length - 1
+                  ? 'border-b border-[#DAD6D1] py-6 first:pt-0'
+                  : 'py-6 first:pt-0'
+              }
+            >
+              <div className="flex gap-3">
+                <img
+                  src={comment.avatar}
+                  alt={comment.author}
+                  className="h-10 w-10 shrink-0 rounded-full object-cover"
+                />
+                <div className="flex flex-col gap-2">
+                  <div>
+                    <p className="text-base font-bold text-[#26231E]">
+                      {comment.author}
+                    </p>
+                    <p className="text-sm text-[#75716B]">{comment.date}</p>
+                  </div>
+                  <p className="text-base leading-[165%] text-[#43403B]">
+                    {comment.content}
+                  </p>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
