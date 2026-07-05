@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Search } from 'lucide-react'
 
 import { getPosts } from '@/api/blogApi'
@@ -139,13 +140,38 @@ export function ArticleSection() {
               type="text"
               placeholder="Search"
               value={keyword}
-              onChange={(event) => setKeyword(event.target.value)}
+              onChange={(event) => {
+                setIsLoading(true)
+                setKeyword(event.target.value)
+              }}
               className="h-12 rounded-lg border-[#DAD6D1] bg-white pr-10 text-base"
             />
             <Search
               size={20}
               className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[#75716B]"
             />
+
+            {debouncedKeyword.trim() && (
+              <ul className="absolute top-full right-0 left-0 z-10 mt-1 max-h-60 overflow-y-auto rounded-lg border border-[#DAD6D1] bg-white shadow-md">
+                {isLoading ? (
+                  <li className="px-4 py-3 text-sm text-[#75716B]">Searching...</li>
+                ) : posts.length > 0 ? (
+                  posts.map((post) => (
+                    <li key={post.id}>
+                      <Link
+                        to={`/post/${post.id}`}
+                        className="block px-4 py-3 text-sm text-[#26231E] hover:bg-[#EFEEEB]"
+                        onClick={() => setKeyword('')}
+                      >
+                        {post.title}
+                      </Link>
+                    </li>
+                  ))
+                ) : (
+                  <li className="px-4 py-3 text-sm text-[#75716B]">No articles found</li>
+                )}
+              </ul>
+            )}
           </div>
 
           <Select

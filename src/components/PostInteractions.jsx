@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Copy, X } from 'lucide-react'
+import { toast } from 'sonner'
 
 import {
   AlertDialog,
@@ -86,12 +87,28 @@ export function PostInteractions({ likes = 0 }) {
     requireLogin()
   }
 
+  const articleUrl = window.location.href
+
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(window.location.href)
+      await navigator.clipboard.writeText(articleUrl)
+      toast.success('Copied!', {
+        description: 'This article has been copied to your clipboard.',
+      })
     } catch (error) {
       console.error('Failed to copy link:', error)
     }
+  }
+
+  const handleShare = (platform) => {
+    const encodedUrl = encodeURIComponent(articleUrl)
+    const shareUrls = {
+      facebook: `https://www.facebook.com/share.php?u=${encodedUrl}`,
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
+      twitter: `https://www.twitter.com/share?&url=${encodedUrl}`,
+    }
+
+    window.open(shareUrls[platform], '_blank', 'noopener,noreferrer')
   }
 
   return (
@@ -120,6 +137,7 @@ export function PostInteractions({ likes = 0 }) {
           <button
             type="button"
             aria-label="Share on Facebook"
+            onClick={() => handleShare('facebook')}
             className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-[#26231E] bg-white text-[#26231E] transition-colors hover:bg-[#FAFAF9]"
           >
             <FacebookIcon size={16} />
@@ -128,6 +146,7 @@ export function PostInteractions({ likes = 0 }) {
           <button
             type="button"
             aria-label="Share on LinkedIn"
+            onClick={() => handleShare('linkedin')}
             className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-[#26231E] bg-white text-[#26231E] transition-colors hover:bg-[#FAFAF9]"
           >
             <LinkedInIcon size={16} />
@@ -136,6 +155,7 @@ export function PostInteractions({ likes = 0 }) {
           <button
             type="button"
             aria-label="Share on X"
+            onClick={() => handleShare('twitter')}
             className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-[#26231E] bg-white text-[#26231E] transition-colors hover:bg-[#FAFAF9]"
           >
             <TwitterIcon size={14} />
