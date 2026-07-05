@@ -1,6 +1,8 @@
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { Menu } from 'lucide-react'
 
+import { MemberNavMenu, getMemberFromStorage } from '@/components/MemberNavMenu'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,6 +12,13 @@ import {
 import { cn } from '@/lib/utils'
 
 export function NavBar({ activePage, variant = 'default' }) {
+  const location = useLocation()
+  const [member, setMember] = useState(() => getMemberFromStorage())
+
+  useEffect(() => {
+    setMember(getMemberFromStorage())
+  }, [location.pathname])
+
   const loginIsActive = activePage === 'login'
   const signUpIsActive = activePage === 'signup' || !activePage
 
@@ -42,56 +51,64 @@ export function NavBar({ activePage, variant = 'default' }) {
           hh<span className="text-[#12B279]">.</span>
         </Link>
 
-        <div className="hidden items-center gap-3 lg:flex lg:pr-5">
-          <Link to="/login" className={loginClassName}>
-            Log in
-          </Link>
-          <Link to="/signup" className={signUpClassName}>
-            Sign up
-          </Link>
-        </div>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            type="button"
-            aria-label="Open menu"
-            className="flex cursor-pointer items-center justify-center text-[#26231E] outline-none lg:hidden"
-          >
-            <Menu size={24} />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            sideOffset={12}
-            className="flex w-[calc(100vw-3rem)] flex-col gap-3 border-none bg-white p-0 shadow-none ring-0"
-          >
-            <DropdownMenuItem asChild>
-              <Link
-                to="/login"
-                className={cn(
-                  'cursor-pointer justify-center rounded-full px-[18px] py-3 text-sm font-medium no-underline focus:bg-transparent',
-                  loginIsActive
-                    ? 'border border-[#26231E] bg-[#26231E] text-white focus:bg-[#26231E] focus:text-white'
-                    : 'border border-[#DAD6D1] bg-transparent text-[#26231E]',
-                )}
-              >
+        {member ? (
+          <div className="lg:pr-5">
+            <MemberNavMenu user={member} onLogout={() => setMember(null)} />
+          </div>
+        ) : (
+          <>
+            <div className="hidden items-center gap-3 lg:flex lg:pr-5">
+              <Link to="/login" className={loginClassName}>
                 Log in
               </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link
-                to="/signup"
-                className={cn(
-                  'cursor-pointer justify-center rounded-full px-[18px] py-3 text-sm font-medium no-underline focus:bg-transparent',
-                  signUpIsActive
-                    ? 'border border-[#26231E] bg-[#26231E] text-white focus:bg-[#26231E] focus:text-white'
-                    : 'border border-[#DAD6D1] bg-transparent text-[#26231E]',
-                )}
-              >
+              <Link to="/signup" className={signUpClassName}>
                 Sign up
               </Link>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            </div>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                type="button"
+                aria-label="Open menu"
+                className="flex cursor-pointer items-center justify-center text-[#26231E] outline-none lg:hidden"
+              >
+                <Menu size={24} />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                sideOffset={12}
+                className="flex w-[calc(100vw-3rem)] flex-col gap-3 border-none bg-white p-0 shadow-none ring-0"
+              >
+                <DropdownMenuItem asChild>
+                  <Link
+                    to="/login"
+                    className={cn(
+                      'cursor-pointer justify-center rounded-full px-[18px] py-3 text-sm font-medium no-underline focus:bg-transparent',
+                      loginIsActive
+                        ? 'border border-[#26231E] bg-[#26231E] text-white focus:bg-[#26231E] focus:text-white'
+                        : 'border border-[#DAD6D1] bg-transparent text-[#26231E]',
+                    )}
+                  >
+                    Log in
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link
+                    to="/signup"
+                    className={cn(
+                      'cursor-pointer justify-center rounded-full px-[18px] py-3 text-sm font-medium no-underline focus:bg-transparent',
+                      signUpIsActive
+                        ? 'border border-[#26231E] bg-[#26231E] text-white focus:bg-[#26231E] focus:text-white'
+                        : 'border border-[#DAD6D1] bg-transparent text-[#26231E]',
+                    )}
+                  >
+                    Sign up
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
+        )}
       </nav>
     </header>
   )
