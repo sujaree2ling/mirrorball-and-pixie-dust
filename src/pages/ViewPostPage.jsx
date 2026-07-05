@@ -4,6 +4,7 @@ import Markdown from 'react-markdown'
 
 import { NavBar } from '@/components/NavBar'
 import { Footer } from '@/components/Footer'
+import { PostInteractions } from '@/components/PostInteractions'
 import { blogPosts } from '@/data/blogPosts'
 
 const markdownComponents = {
@@ -83,6 +84,8 @@ export function ViewPostPage() {
         </p>
 
         <PostContent content={post.content} />
+
+        <PostInteractions likes={post.likes} />
       </main>
       <Footer />
     </>

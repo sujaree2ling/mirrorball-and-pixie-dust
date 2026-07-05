@@ -2,8 +2,8 @@ import { Mails, Globe, Send } from 'lucide-react'
 
 export function Footer() {
   const socials = [
-    { label: 'Email', href: 'mailto:hello@example.com', Icon: Mails },
-    { label: 'Website', href: '#', Icon: Globe },
+    { label: 'Email', href: 'mailto:sujaree2ling@gmail.com', Icon: Mails },
+    { label: 'LinkedIn', href: 'https://www.linkedin.com/in/sujaree-sittiampornpun', Icon: Globe },
     { label: 'Message', href: '#', Icon: Send },
   ]
 

@@ -4,6 +4,7 @@ import { HeroSection } from './components/HeroSection'
 import { Footer } from './components/Footer'
 import { ArticleSection } from './components/ArticleSection'
 import { ViewPostPage } from './pages/ViewPostPage'
+import { NotFoundPage } from './pages/NotFoundPage'
 
 function HomePage() {
   return (
@@ -22,6 +23,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/post/:id" element={<ViewPostPage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </div>
   )
