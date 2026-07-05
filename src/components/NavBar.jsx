@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { Menu } from 'lucide-react'
 
 import {
@@ -6,31 +7,48 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { cn } from '@/lib/utils'
 
-export function NavBar() {
+export function NavBar({ activePage, variant = 'default' }) {
+  const loginIsActive = activePage === 'login'
+  const signUpIsActive = activePage === 'signup' || !activePage
+
+  const headerClassName = cn(
+    'border-b border-[#DAD6D1]',
+    variant === 'auth' ? 'bg-[#F9F8F6]' : 'bg-white',
+  )
+
+  const loginClassName = cn(
+    'cursor-pointer rounded-full px-6 py-2.5 text-[15px] font-medium no-underline transition-colors',
+    loginIsActive
+      ? 'border border-[#26231E] bg-[#26231E] text-white hover:opacity-85'
+      : 'border border-[#DAD6D1] bg-transparent text-[#26231E] hover:border-[#26231E]',
+  )
+
+  const signUpClassName = cn(
+    'cursor-pointer rounded-full px-6 py-2.5 text-[15px] font-medium no-underline transition-colors',
+    signUpIsActive
+      ? 'border border-[#26231E] bg-[#26231E] text-white hover:opacity-85'
+      : 'border border-[#DAD6D1] bg-transparent text-[#26231E] hover:border-[#26231E]',
+  )
+
   return (
-    <header className="border-b border-[#DAD6D1] bg-white">
+    <header className={headerClassName}>
       <nav className="flex items-center justify-between px-6 py-4 lg:px-30 lg:py-5">
-        <a
-          href="/"
+        <Link
+          to="/"
           className="text-2xl font-bold tracking-[-0.5px] text-[#26231E] no-underline"
         >
           hh<span className="text-[#12B279]">.</span>
-        </a>
+        </Link>
 
         <div className="hidden items-center gap-3 lg:flex lg:pr-5">
-          <button
-            type="button"
-            className="cursor-pointer rounded-full border border-[#DAD6D1] bg-transparent px-6 py-2.5 text-[15px] font-medium text-[#26231E] transition-colors hover:border-[#26231E]"
-          >
+          <Link to="/login" className={loginClassName}>
             Log in
-          </button>
-          <button
-            type="button"
-            className="cursor-pointer rounded-full border border-[#26231E] bg-[#26231E] px-6 py-2.5 text-[15px] font-medium text-white transition-opacity hover:opacity-85"
-          >
+          </Link>
+          <Link to="/signup" className={signUpClassName}>
             Sign up
-          </button>
+          </Link>
         </div>
 
         <DropdownMenu>
@@ -46,11 +64,31 @@ export function NavBar() {
             sideOffset={12}
             className="flex w-[calc(100vw-3rem)] flex-col gap-3 border-none bg-white p-0 shadow-none ring-0"
           >
-            <DropdownMenuItem className="cursor-pointer justify-center rounded-full border border-[#DAD6D1] bg-transparent px-[18px] py-3 text-sm font-medium text-[#26231E] focus:bg-transparent">
-              Log in
+            <DropdownMenuItem asChild>
+              <Link
+                to="/login"
+                className={cn(
+                  'cursor-pointer justify-center rounded-full px-[18px] py-3 text-sm font-medium no-underline focus:bg-transparent',
+                  loginIsActive
+                    ? 'border border-[#26231E] bg-[#26231E] text-white focus:bg-[#26231E] focus:text-white'
+                    : 'border border-[#DAD6D1] bg-transparent text-[#26231E]',
+                )}
+              >
+                Log in
+              </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer justify-center rounded-full border border-[#26231E] bg-[#26231E] px-[18px] py-3 text-sm font-medium text-white focus:bg-[#26231E] focus:text-white">
-              Sign up
+            <DropdownMenuItem asChild>
+              <Link
+                to="/signup"
+                className={cn(
+                  'cursor-pointer justify-center rounded-full px-[18px] py-3 text-sm font-medium no-underline focus:bg-transparent',
+                  signUpIsActive
+                    ? 'border border-[#26231E] bg-[#26231E] text-white focus:bg-[#26231E] focus:text-white'
+                    : 'border border-[#DAD6D1] bg-transparent text-[#26231E]',
+                )}
+              >
+                Sign up
+              </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
