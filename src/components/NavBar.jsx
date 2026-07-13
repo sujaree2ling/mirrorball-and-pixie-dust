@@ -17,7 +17,7 @@ export function NavBar({ activePage, variant = 'default' }) {
 
   useEffect(() => {
     setMember(getMemberFromStorage())
-  }, [location.pathname])
+  }, [location.pathname, location.state])
 
   const loginIsActive = activePage === 'login'
   const signUpIsActive = activePage === 'signup' || !activePage
