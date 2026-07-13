@@ -94,9 +94,13 @@ export function ResetPasswordPage() {
   }
 
   return (
-    <AdminPanelLayout title="Reset password" activePage="/reset-password">
-      <div className="max-w-[520px]">
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6" noValidate>
+    <AdminPanelLayout
+      title="Reset password"
+      activePage="/reset-password"
+      variant="settings"
+    >
+      <div className="lg:max-w-[520px]">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5 lg:gap-6" noValidate>
           <FormField
             id="currentPassword"
             name="currentPassword"

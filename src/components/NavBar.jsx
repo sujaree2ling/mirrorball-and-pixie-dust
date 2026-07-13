@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import { Menu } from 'lucide-react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Menu, X } from 'lucide-react'
 
-import { MemberNavMenu, getMemberFromStorage } from '@/components/MemberNavMenu'
+import {
+  MemberMobileMenuPanel,
+  MemberNavMenu,
+  getMemberFromStorage,
+} from '@/components/MemberNavMenu'
+import { logoutUser } from '@/lib/auth'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,11 +18,17 @@ import { cn } from '@/lib/utils'
 
 export function NavBar({ activePage, variant = 'default' }) {
   const location = useLocation()
+  const navigate = useNavigate()
   const [member, setMember] = useState(() => getMemberFromStorage())
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     setMember(getMemberFromStorage())
   }, [location.pathname, location.state])
+
+  useEffect(() => {
+    setMobileMenuOpen(false)
+  }, [location.pathname])
 
   const loginIsActive = activePage === 'login'
   const signUpIsActive = activePage === 'signup' || !activePage
@@ -41,6 +52,13 @@ export function NavBar({ activePage, variant = 'default' }) {
       : 'border border-[#DAD6D1] bg-transparent text-[#26231E] hover:border-[#26231E]',
   )
 
+  const handleLogout = () => {
+    logoutUser()
+    setMember(null)
+    setMobileMenuOpen(false)
+    navigate('/')
+  }
+
   return (
     <header className={headerClassName}>
       <nav className="flex items-center justify-between px-6 py-4 lg:px-30 lg:py-5">
@@ -52,9 +70,19 @@ export function NavBar({ activePage, variant = 'default' }) {
         </Link>
 
         {member ? (
-          <div className="lg:pr-5">
+          <>
+            <button
+              type="button"
+              aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={mobileMenuOpen}
+              onClick={() => setMobileMenuOpen((open) => !open)}
+              className="flex cursor-pointer items-center justify-center text-[#26231E] outline-none lg:hidden"
+            >
+              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+
             <MemberNavMenu user={member} onLogout={() => setMember(null)} />
-          </div>
+          </>
         ) : (
           <>
             <div className="hidden items-center gap-3 lg:flex lg:pr-5">
@@ -110,6 +138,14 @@ export function NavBar({ activePage, variant = 'default' }) {
           </>
         )}
       </nav>
+
+      {member && mobileMenuOpen && (
+        <MemberMobileMenuPanel
+          user={member}
+          onLogout={handleLogout}
+          onNavigate={() => setMobileMenuOpen(false)}
+        />
+      )}
     </header>
   )
 }
