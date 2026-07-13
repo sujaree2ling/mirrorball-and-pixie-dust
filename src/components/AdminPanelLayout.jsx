@@ -72,15 +72,15 @@ function UserPageHeader({ user, title }) {
 
 function AdminSidebar({ activePage, onLogout }) {
   return (
-    <aside className="hidden w-[260px] shrink-0 flex-col bg-[#EAE7E2] py-8 lg:flex">
-      <div className="mb-8 flex flex-col gap-1 px-8">
+    <aside className="sticky top-0 hidden h-screen w-[250px] shrink-0 flex-col bg-[#EAE7E2] lg:flex">
+      <div className="flex flex-col gap-0.5 px-6 pt-8 pb-6">
         <Link
           to="/"
-          className="text-2xl font-bold leading-none tracking-[-0.5px] text-[#26231E] no-underline"
+          className="text-[22px] font-bold leading-none tracking-[-0.5px] text-[#26231E] no-underline"
         >
           hh<span className="text-[#12B279]">.</span>
         </Link>
-        <span className="text-base font-bold text-[#F2B68C]">Admin panel</span>
+        <span className="text-sm font-bold text-[#F2B68C]">Admin panel</span>
       </div>
 
       <nav className="flex flex-1 flex-col">
@@ -92,33 +92,33 @@ function AdminSidebar({ activePage, onLogout }) {
               key={to}
               to={to}
               className={cn(
-                'flex items-center gap-3 px-8 py-3 text-[15px] font-medium no-underline transition-colors',
+                'flex w-full items-center gap-3 px-6 py-3 text-sm font-medium no-underline transition-colors',
                 isActive
-                  ? 'bg-[#DAD6D1] text-[#26231E]'
+                  ? 'bg-[#DAD6D1] font-semibold text-[#26231E]'
                   : 'text-[#75716B] hover:bg-[#DAD6D1]/40 hover:text-[#26231E]',
               )}
             >
-              <Icon size={18} strokeWidth={1.75} />
+              <Icon size={16} strokeWidth={1.75} />
               {label}
             </Link>
           )
         })}
       </nav>
 
-      <div className="mt-8 flex flex-col">
+      <div className="mt-auto flex flex-col pb-8">
         <Link
           to="/"
-          className="flex items-center gap-3 px-8 py-3 text-[15px] font-medium text-[#75716B] no-underline transition-colors hover:bg-[#DAD6D1]/40 hover:text-[#26231E]"
+          className="flex w-full items-center gap-3 px-6 py-3 text-sm font-medium text-[#75716B] no-underline transition-colors hover:bg-[#DAD6D1]/40 hover:text-[#26231E]"
         >
-          <ExternalLink size={18} strokeWidth={1.75} />
+          <ExternalLink size={16} strokeWidth={1.75} />
           hh. website
         </Link>
         <button
           type="button"
           onClick={onLogout}
-          className="flex cursor-pointer items-center gap-3 px-8 py-3 text-left text-[15px] font-medium text-[#75716B] transition-colors hover:bg-[#DAD6D1]/40 hover:text-[#26231E]"
+          className="flex w-full cursor-pointer items-center gap-3 px-6 py-3 text-left text-sm font-medium text-[#75716B] transition-colors hover:bg-[#DAD6D1]/40 hover:text-[#26231E]"
         >
-          <LogOut size={18} strokeWidth={1.75} />
+          <LogOut size={16} strokeWidth={1.75} />
           Log out
         </button>
       </div>
