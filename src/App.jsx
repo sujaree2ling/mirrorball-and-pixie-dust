@@ -11,6 +11,8 @@ import { SignUpPage } from './pages/SignUpPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { AdminPage } from './pages/AdminPage'
+import { AdminCategoryPage } from './pages/AdminCategoryPage'
+import { AdminNotificationPage } from './pages/AdminNotificationPage'
 
 function HomePage() {
   return (
@@ -34,6 +36,8 @@ function App() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/admin/category" element={<AdminCategoryPage />} />
+        <Route path="/admin/notification" element={<AdminNotificationPage />} />
         <Route path="/post/:id" element={<ViewPostPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
