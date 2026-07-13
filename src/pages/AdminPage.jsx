@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ARTICLE_CATEGORIES, deleteArticle, fetchAdminArticles } from '@/lib/adminArticles'
+import { deleteArticle, fetchAdminArticles, getArticleCategories } from '@/lib/adminArticles'
 import { cn } from '@/lib/utils'
 
 function StatusLabel({ status }) {
@@ -59,6 +59,13 @@ export function AdminPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [isLoading, setIsLoading] = useState(true)
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const articleCategories = getArticleCategories()
+
+  useEffect(() => {
+    if (category && !articleCategories.includes(category)) {
+      setCategory('')
+    }
+  }, [category, articleCategories])
 
   useEffect(() => {
     const toastData = location.state?.toast
@@ -177,7 +184,7 @@ export function AdminPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Category</SelectItem>
-            {ARTICLE_CATEGORIES.map((item) => (
+            {articleCategories.map((item) => (
               <SelectItem key={item} value={item}>
                 {item}
               </SelectItem>
@@ -218,7 +225,7 @@ export function AdminPage() {
                     index % 2 === 1 && 'bg-[#FAFAF9]',
                   )}
                 >
-                  <td className="px-6 py-5 text-base font-semibold text-[#26231E]">
+                  <td className="px-6 py-5 text-base text-[#26231E]">
                     {article.title}
                   </td>
                   <td className="px-4 py-5 text-[#75716B]">{article.category}</td>
