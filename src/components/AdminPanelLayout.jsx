@@ -131,6 +131,7 @@ export function AdminPanelLayout({
   activePage,
   variant = 'admin',
   headerAction,
+  contentClassName,
   children,
 }) {
   const location = useLocation()
@@ -176,6 +177,7 @@ export function AdminPanelLayout({
           <div
             className={cn(
               isSettings ? 'px-4 py-6 lg:px-12 lg:py-8' : 'px-6 py-6 lg:px-12 lg:pt-8',
+              contentClassName,
             )}
           >
             <div
