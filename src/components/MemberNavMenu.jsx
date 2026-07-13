@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { Bell, ChevronDown, LogOut, RotateCcw, User } from 'lucide-react'
+import { Bell, ChevronDown, ExternalLink, LogOut, RotateCcw, User } from 'lucide-react'
 
 import {
   DropdownMenu,
@@ -107,8 +107,6 @@ export function MemberNavMenu({ user, onLogout }) {
             </Link>
           </DropdownMenuItem>
 
-          <DropdownMenuSeparator className="my-1 bg-[#DAD6D1]" />
-
           <DropdownMenuItem asChild>
             <Link
               to="/reset-password"
@@ -116,6 +114,16 @@ export function MemberNavMenu({ user, onLogout }) {
             >
               <RotateCcw size={18} strokeWidth={1.75} />
               Reset password
+            </Link>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem asChild>
+            <Link
+              to="/admin"
+              className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-base text-[#26231E] no-underline focus:bg-[#EFEEEB]"
+            >
+              <ExternalLink size={18} strokeWidth={1.75} />
+              Admin panel
             </Link>
           </DropdownMenuItem>
 
