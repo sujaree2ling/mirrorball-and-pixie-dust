@@ -9,6 +9,9 @@ import { cn } from '@/lib/utils'
 
 const BIO_MAX_LENGTH = 120
 
+const saveButtonClassName =
+  'cursor-pointer rounded-full border border-[#26231E] bg-[#26231E] px-6 py-2.5 text-[15px] font-medium text-white transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-60'
+
 export function ProfilePage() {
   const navigate = useNavigate()
   const fileInputRef = useRef(null)
@@ -91,30 +94,47 @@ export function ProfilePage() {
     <AdminPanelLayout
       title="Profile"
       activePage="/profile"
+      variant="settings"
       headerAction={
         <button
           type="submit"
           form="profile-form"
           disabled={isSubmitting}
-          className="cursor-pointer rounded-full border border-[#26231E] bg-[#26231E] px-6 py-2 text-[15px] font-medium text-white transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-60"
+          className={cn(saveButtonClassName, 'hidden lg:inline-flex')}
         >
           {isSubmitting ? 'Saving...' : 'Save'}
         </button>
       }
     >
       <form id="profile-form" onSubmit={handleSubmit} noValidate>
-        <div className="flex flex-col items-start gap-5 border-b border-[#DAD6D1] pb-8 sm:flex-row sm:items-center">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleAvatarChange}
+          className="hidden"
+        />
+
+        <div className="flex flex-col items-center gap-4 border-b border-[#DAD6D1] pb-6 lg:hidden">
           <img
             src={avatar}
             alt={form.name}
             className="h-24 w-24 rounded-full object-cover"
           />
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleAvatarChange}
-            className="hidden"
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full cursor-pointer rounded-full border border-[#26231E] bg-white px-6 py-2.5 text-[15px] font-medium text-[#26231E] transition-opacity hover:opacity-85"
+          >
+            Upload profile picture
+          </button>
+        </div>
+
+        <div className="hidden flex-col items-start gap-5 border-b border-[#DAD6D1] pb-8 lg:flex lg:flex-row lg:items-center">
+          <img
+            src={avatar}
+            alt={form.name}
+            className="h-24 w-24 rounded-full object-cover"
           />
           <button
             type="button"
@@ -125,7 +145,7 @@ export function ProfilePage() {
           </button>
         </div>
 
-        <div className="mt-8 max-w-[520px] flex flex-col gap-6">
+        <div className="mt-6 flex flex-col gap-5 lg:mt-8 lg:max-w-[520px] lg:gap-6">
           <FormField
             id="name"
             name="name"
@@ -157,7 +177,7 @@ export function ProfilePage() {
           />
         </div>
 
-        <div className="mt-6 flex w-full max-w-[calc(100%-1rem)] flex-col gap-1.5">
+        <div className="mt-5 hidden flex-col gap-1.5 lg:mt-6 lg:flex lg:w-full lg:max-w-[calc(100%-1rem)]">
           <label htmlFor="bio" className="text-sm font-medium text-[#75716B]">
             Bio (max 120 letters)
           </label>
@@ -175,6 +195,14 @@ export function ProfilePage() {
           />
           {errors.bio && <p className="text-sm text-[#EB5164]">{errors.bio}</p>}
         </div>
+
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className={cn(saveButtonClassName, 'mt-6 lg:hidden')}
+        >
+          {isSubmitting ? 'Saving...' : 'Save'}
+        </button>
       </form>
     </AdminPanelLayout>
   )
