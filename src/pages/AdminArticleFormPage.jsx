@@ -22,10 +22,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
-  ARTICLE_CATEGORIES,
   createArticle,
   deleteArticle,
   getAdminArticle,
+  getArticleCategories,
   updateArticle,
 } from '@/lib/adminArticles'
 import { getCurrentUser } from '@/lib/auth'
@@ -47,6 +47,7 @@ export function AdminArticleFormPage({ mode = 'create' }) {
   const fileInputRef = useRef(null)
   const isEdit = mode === 'edit'
   const authorName = getCurrentUser()?.name ?? ''
+  const articleCategories = getArticleCategories()
 
   const [form, setForm] = useState(emptyForm)
   const [articleStatus, setArticleStatus] = useState('draft')
@@ -280,7 +281,7 @@ export function AdminArticleFormPage({ mode = 'create' }) {
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
-                {ARTICLE_CATEGORIES.map((item) => (
+                {articleCategories.map((item) => (
                   <SelectItem key={item} value={item}>
                     {item}
                   </SelectItem>

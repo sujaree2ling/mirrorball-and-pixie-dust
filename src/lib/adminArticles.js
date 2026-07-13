@@ -1,11 +1,14 @@
 import { getPost, getPosts } from '@/api/blogApi'
+import { getCategoryNames, getSourceCategoryNames, resolveCategoryName } from '@/lib/adminCategories'
 import { getCurrentUser } from '@/lib/auth'
 
 const LOCAL_ARTICLES_KEY = 'admin_local_articles'
 const OVERRIDES_KEY = 'admin_article_overrides'
 const DELETED_API_IDS_KEY = 'admin_deleted_api_ids'
 
-export const ARTICLE_CATEGORIES = ['Cat', 'Inspiration', 'General']
+export function getArticleCategories() {
+  return getCategoryNames()
+}
 export const ARTICLE_STATUSES = ['draft', 'published']
 
 function readJson(key, fallback) {
@@ -50,7 +53,7 @@ function normalizeArticle(article, source) {
     title: article.title ?? '',
     description: article.description ?? '',
     content: article.content ?? '',
-    category: article.category ?? 'General',
+    category: resolveCategoryName(article.category ?? 'General'),
     image: article.image ?? '',
     author: article.author ?? getCurrentUser()?.name ?? 'Admin',
     date: article.date ?? new Date().toISOString(),
@@ -68,26 +71,63 @@ export async function fetchAdminArticles({
 } = {}) {
   const deletedIds = new Set(getDeletedApiIds())
   const overrides = getOverrides()
+  const seenApiIds = new Set()
+  const apiPosts = []
 
-  const apiData = await getPosts({
-    page: 1,
-    limit: 30,
-    category,
-    keyword,
-  })
+  const addApiPosts = (posts) => {
+    posts.forEach((post) => {
+      if (deletedIds.has(post.id) || seenApiIds.has(post.id)) return
+      seenApiIds.add(post.id)
+      apiPosts.push(post)
+    })
+  }
 
-  const apiArticles = apiData.posts
-    .filter((post) => !deletedIds.has(post.id))
-    .map((post) =>
-      normalizeArticle(
-        {
-          ...post,
-          ...overrides[post.id],
-          status: overrides[post.id]?.status ?? 'published',
-        },
-        'api',
-      ),
+  if (category) {
+    const sourceCategories = getSourceCategoryNames(category)
+
+    for (const sourceCategory of sourceCategories) {
+      const apiData = await getPosts({
+        page: 1,
+        limit: 30,
+        keyword,
+        category: sourceCategory,
+      })
+      addApiPosts(apiData.posts)
+    }
+
+    const overrideIds = Object.entries(overrides)
+      .filter(([, value]) => resolveCategoryName(value.category ?? '') === category)
+      .map(([id]) => id)
+
+    await Promise.all(
+      overrideIds.map(async (postId) => {
+        if (seenApiIds.has(Number(postId)) || deletedIds.has(Number(postId))) return
+
+        try {
+          const post = await getPost(postId)
+          addApiPosts([post])
+        } catch {
+          // Post may have been removed from API.
+        }
+      }),
     )
+  } else {
+    const apiData = await getPosts({ page: 1, limit: 30, keyword })
+    addApiPosts(apiData.posts)
+  }
+
+  const apiArticles = apiPosts.map((post) => {
+    const postOverride = overrides[post.id] ?? overrides[String(post.id)] ?? {}
+
+    return normalizeArticle(
+      {
+        ...post,
+        ...postOverride,
+        status: postOverride.status ?? 'published',
+      },
+      'api',
+    )
+  })
 
   const localArticles = getLocalArticles().map((post) =>
     normalizeArticle(post, 'local'),
