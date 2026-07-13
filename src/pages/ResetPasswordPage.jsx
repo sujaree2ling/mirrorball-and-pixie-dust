@@ -12,7 +12,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { FormField } from '@/components/FormField'
-import { ProfileSettingsLayout } from '@/components/ProfileSettingsLayout'
+import { AdminPanelLayout } from '@/components/AdminPanelLayout'
 import { resetUserPassword } from '@/lib/auth'
 
 export function ResetPasswordPage() {
@@ -94,8 +94,8 @@ export function ResetPasswordPage() {
   }
 
   return (
-    <ProfileSettingsLayout title="Reset password" activePage="/reset-password">
-      <div className="rounded-2xl bg-[#EFEEEB] px-8 py-10 lg:px-10 lg:py-12">
+    <AdminPanelLayout title="Reset password" activePage="/reset-password">
+      <div className="max-w-[520px]">
         <form onSubmit={handleSubmit} className="flex flex-col gap-6" noValidate>
           <FormField
             id="currentPassword"
@@ -106,6 +106,7 @@ export function ResetPasswordPage() {
             onChange={handleChange}
             error={errors.currentPassword}
             placeholder="Current password"
+            size="admin"
           />
 
           <FormField
@@ -117,6 +118,7 @@ export function ResetPasswordPage() {
             onChange={handleChange}
             error={errors.newPassword}
             placeholder="New password"
+            size="admin"
           />
 
           <FormField
@@ -128,6 +130,7 @@ export function ResetPasswordPage() {
             onChange={handleChange}
             error={errors.confirmPassword}
             placeholder="Confirm new password"
+            size="admin"
           />
 
           {errors.form && (
@@ -137,7 +140,7 @@ export function ResetPasswordPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="mt-2 w-fit min-w-[160px] cursor-pointer rounded-full border border-[#26231E] bg-[#26231E] px-10 py-3 text-[15px] font-medium text-white transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-1 w-fit cursor-pointer rounded-full border border-[#26231E] bg-[#26231E] px-6 py-2 text-[15px] font-medium text-white transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-60"
           >
             Reset password
           </button>
@@ -167,6 +170,6 @@ export function ResetPasswordPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </ProfileSettingsLayout>
+    </AdminPanelLayout>
   )
 }

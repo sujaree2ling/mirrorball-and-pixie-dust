@@ -92,11 +92,12 @@ export function loginUser({ email, password }) {
       username: user.username,
       email: user.email,
       avatar: user.avatar || DEFAULT_AVATAR,
+      bio: user.bio ?? '',
     },
   }
 }
 
-export function updateUserProfile({ name, username, avatar }) {
+export function updateUserProfile({ name, username, avatar, bio }) {
   const currentUser = getCurrentUser()
   if (!currentUser) throw new Error('Not logged in')
 
@@ -119,6 +120,7 @@ export function updateUserProfile({ name, username, avatar }) {
     name: name.trim(),
     username: username.trim(),
     avatar: avatar || users[userIndex].avatar || DEFAULT_AVATAR,
+    bio: bio ?? users[userIndex].bio ?? '',
   }
 
   saveUsers(users)
@@ -127,6 +129,7 @@ export function updateUserProfile({ name, username, avatar }) {
     username: users[userIndex].username,
     email: users[userIndex].email,
     avatar: users[userIndex].avatar,
+    bio: users[userIndex].bio,
   })
 
   return getCurrentUser()

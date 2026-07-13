@@ -2,9 +2,12 @@ import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
+import { AdminPanelLayout } from '@/components/AdminPanelLayout'
 import { FormField } from '@/components/FormField'
-import { ProfileSettingsLayout } from '@/components/ProfileSettingsLayout'
 import { getCurrentUser, updateUserProfile } from '@/lib/auth'
+import { cn } from '@/lib/utils'
+
+const BIO_MAX_LENGTH = 120
 
 export function ProfilePage() {
   const navigate = useNavigate()
@@ -15,6 +18,7 @@ export function ProfilePage() {
     name: currentUser?.name ?? '',
     username: currentUser?.username ?? '',
     email: currentUser?.email ?? '',
+    bio: currentUser?.bio ?? '',
   })
   const [avatar, setAvatar] = useState(currentUser?.avatar ?? '/author-icon.jpg')
   const [errors, setErrors] = useState({})
@@ -24,6 +28,12 @@ export function ProfilePage() {
     const { name, value } = event.target
     setForm((prev) => ({ ...prev, [name]: value }))
     setErrors((prev) => ({ ...prev, [name]: undefined }))
+  }
+
+  const handleBioChange = (event) => {
+    const value = event.target.value.slice(0, BIO_MAX_LENGTH)
+    setForm((prev) => ({ ...prev, bio: value }))
+    setErrors((prev) => ({ ...prev, bio: undefined }))
   }
 
   const handleAvatarChange = (event) => {
@@ -59,6 +69,7 @@ export function ProfilePage() {
         name: form.name,
         username: form.username,
         avatar,
+        bio: form.bio,
       })
 
       toast.success('Saved profile', {
@@ -77,9 +88,22 @@ export function ProfilePage() {
   }
 
   return (
-    <ProfileSettingsLayout title="Profile" activePage="/profile">
-      <div className="rounded-2xl bg-[#EFEEEB] px-8 py-10 lg:px-10 lg:py-12">
-        <div className="flex flex-col items-start gap-6 border-b border-[#DAD6D1] pb-8 sm:flex-row sm:items-center">
+    <AdminPanelLayout
+      title="Profile"
+      activePage="/profile"
+      headerAction={
+        <button
+          type="submit"
+          form="profile-form"
+          disabled={isSubmitting}
+          className="cursor-pointer rounded-full border border-[#26231E] bg-[#26231E] px-6 py-2 text-[15px] font-medium text-white transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isSubmitting ? 'Saving...' : 'Save'}
+        </button>
+      }
+    >
+      <form id="profile-form" onSubmit={handleSubmit} noValidate>
+        <div className="flex flex-col items-start gap-5 border-b border-[#DAD6D1] pb-8 sm:flex-row sm:items-center">
           <img
             src={avatar}
             alt={form.name}
@@ -95,13 +119,13 @@ export function ProfilePage() {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="cursor-pointer rounded-full border border-[#26231E] bg-white px-6 py-2.5 text-[15px] font-medium text-[#26231E] transition-opacity hover:opacity-85"
+            className="cursor-pointer rounded-full border border-[#26231E] bg-white px-5 py-2 text-[15px] font-medium text-[#26231E] transition-opacity hover:opacity-85"
           >
             Upload profile picture
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-6" noValidate>
+        <div className="mt-8 max-w-[520px] flex flex-col gap-6">
           <FormField
             id="name"
             name="name"
@@ -109,6 +133,7 @@ export function ProfilePage() {
             value={form.name}
             onChange={handleChange}
             error={errors.name}
+            size="admin"
           />
 
           <FormField
@@ -118,6 +143,7 @@ export function ProfilePage() {
             value={form.username}
             onChange={handleChange}
             error={errors.username}
+            size="admin"
           />
 
           <FormField
@@ -127,19 +153,29 @@ export function ProfilePage() {
             label="Email"
             value={form.email}
             readOnly
-            disabled
-            className="opacity-70"
+            size="admin"
           />
+        </div>
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="mt-2 w-fit min-w-[120px] cursor-pointer rounded-full border border-[#26231E] bg-[#26231E] px-10 py-3 text-[15px] font-medium text-white transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isSubmitting ? 'Saving...' : 'Save'}
-          </button>
-        </form>
-      </div>
-    </ProfileSettingsLayout>
+        <div className="mt-6 flex w-full max-w-[calc(100%-1rem)] flex-col gap-1.5">
+          <label htmlFor="bio" className="text-sm font-medium text-[#75716B]">
+            Bio (max 120 letters)
+          </label>
+          <textarea
+            id="bio"
+            name="bio"
+            value={form.bio}
+            onChange={handleBioChange}
+            maxLength={BIO_MAX_LENGTH}
+            rows={5}
+            className={cn(
+              'w-full resize-y rounded-lg border bg-white px-3 py-3 text-[15px] leading-relaxed text-[#26231E] outline-none placeholder:text-[#75716B]/60 focus-visible:border-[#26231E]',
+              errors.bio ? 'border-[#EB5164]' : 'border-[#DAD6D1]',
+            )}
+          />
+          {errors.bio && <p className="text-sm text-[#EB5164]">{errors.bio}</p>}
+        </div>
+      </form>
+    </AdminPanelLayout>
   )
 }
