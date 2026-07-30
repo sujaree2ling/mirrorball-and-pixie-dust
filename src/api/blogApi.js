@@ -7,7 +7,7 @@ export async function getPosts({
   limit = 6,
   category = '',
   keyword = '',
-  status = '',
+  status = 'published',
 } = {}) {
   const params = { page, limit }
 

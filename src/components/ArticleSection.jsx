@@ -14,7 +14,7 @@ import {
 import { BlogCard } from '@/components/BlogCard'
 import { formatDate } from '@/lib/formatDate'
 
-const categories = ['Highlight', 'Cat', 'Inspiration', 'General']
+const categories = ['Highlight', 'Taylor Swift', 'Disney']
 const POSTS_PER_PAGE = 6
 
 function formatPosts(posts) {
