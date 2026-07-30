@@ -114,6 +114,7 @@ export function ViewPostPage() {
           src={post.image}
           alt={post.title}
           className="mb-8 h-[260px] w-full rounded-2xl object-cover sm:h-[420px]"
+          style={{ objectPosition: post.imagePosition ?? 'center' }}
         />
 
         <div className="mb-4 flex items-center gap-3 text-sm">

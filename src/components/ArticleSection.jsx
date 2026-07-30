@@ -42,6 +42,7 @@ export function ArticleSection() {
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
   const [isLoading, setIsLoading] = useState(true)
+  const [fetchError, setFetchError] = useState('')
   const isLoadingMoreRef = useRef(false)
 
   useEffect(() => {
@@ -55,6 +56,7 @@ export function ArticleSection() {
 
     ;(async () => {
       try {
+        setFetchError('')
         const data = await getPosts({
           page: 1,
           limit: POSTS_PER_PAGE,
@@ -64,11 +66,16 @@ export function ArticleSection() {
 
         if (cancelled) return
 
-        setPosts(dedupePostsById(formatPosts(data.posts)))
+        setPosts(dedupePostsById(formatPosts(data.posts ?? [])))
         setPage(data.currentPage)
         setHasMore(data.currentPage < data.totalPages)
       } catch (error) {
         console.error('Error fetching posts:', error)
+        if (!cancelled) {
+          setPosts([])
+          setHasMore(false)
+          setFetchError('Could not load articles. Please try again.')
+        }
       } finally {
         if (!cancelled) setIsLoading(false)
       }
@@ -203,12 +210,21 @@ export function ArticleSection() {
         </div>
       </div>
 
+      {fetchError ? (
+        <p className="mt-8 text-center text-sm text-red-600">{fetchError}</p>
+      ) : null}
+
+      {!isLoading && !fetchError && posts.length === 0 ? (
+        <p className="mt-8 text-center text-sm text-[#75716B]">No articles found</p>
+      ) : null}
+
       <div className="mt-8 grid grid-cols-1 gap-x-5 gap-y-12 md:grid-cols-2">
         {posts.map((post) => (
           <BlogCard
             key={post.id}
             id={post.id}
             image={post.image}
+            imagePosition={post.imagePosition}
             category={post.category}
             title={post.title}
             description={post.description}
