@@ -4,9 +4,9 @@ export const ADMIN_NOTIFICATIONS = [
     author: 'Jacob Lash',
     avatar: '/author-icon.jpg',
     action: 'Commented on your article:',
-    articleTitle: 'The Fascinating World of Cats: Why We Love Our Furry Friends',
+    articleTitle: "How Taylor Swift's folklore Turned Isolation into Art",
     excerpt:
-      'I loved this article! It really explains why my cat is so independent yet loving. The purring section was super interesting.',
+      'This piece captures the quiet mood of folklore so well. The section about gray emotions really stuck with me.',
     time: '4 hours ago',
     viewTo: '/post/1',
   },
@@ -15,9 +15,9 @@ export const ADMIN_NOTIFICATIONS = [
     author: 'Jacob Lash',
     avatar: '/author-icon.jpg',
     action: 'liked your article:',
-    articleTitle: 'The Fascinating World of Cats: Why We Love Our Furry Friends',
+    articleTitle: "Up: The Beautiful Truth About Life's Real Adventures",
     time: '4 hours ago',
-    viewTo: '/post/1',
+    viewTo: '/post/12',
   },
 ]
 

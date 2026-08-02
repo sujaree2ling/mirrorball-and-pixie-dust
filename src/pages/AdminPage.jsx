@@ -59,10 +59,27 @@ export function AdminPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [isLoading, setIsLoading] = useState(true)
   const [deleteTarget, setDeleteTarget] = useState(null)
-  const articleCategories = getArticleCategories()
+  const [articleCategories, setArticleCategories] = useState([])
 
   useEffect(() => {
-    if (category && !articleCategories.includes(category)) {
+    let cancelled = false
+
+    ;(async () => {
+      try {
+        const categories = await getArticleCategories()
+        if (!cancelled) setArticleCategories(categories)
+      } catch (error) {
+        console.error('Error fetching categories:', error)
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    if (category && articleCategories.length > 0 && !articleCategories.includes(category)) {
       setCategory('')
     }
   }, [category, articleCategories])
@@ -122,15 +139,19 @@ export function AdminPage() {
     }
   }, [page, debouncedKeyword, status, category])
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!deleteTarget) return
 
-    deleteArticle(deleteTarget.id)
-    setDeleteTarget(null)
-    setArticles((current) => current.filter((article) => article.id !== deleteTarget.id))
-    toast.success('Article deleted!', {
-      description: 'Article deleted successfully.',
-    })
+    try {
+      await deleteArticle(deleteTarget.id)
+      setDeleteTarget(null)
+      setArticles((current) => current.filter((article) => article.id !== deleteTarget.id))
+      toast.success('Article deleted!', {
+        description: 'Article deleted successfully.',
+      })
+    } catch (error) {
+      console.error('Error deleting article:', error)
+    }
   }
 
   return (

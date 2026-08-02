@@ -40,8 +40,9 @@ export function ArticleSection() {
   const [debouncedKeyword, setDebouncedKeyword] = useState('')
   const [posts, setPosts] = useState([])
   const [page, setPage] = useState(1)
-  const [hasMore, setHasMore] = useState(true)
+  const [hasMore, setHasMore] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [fetchError, setFetchError] = useState('')
   const isLoadingMoreRef = useRef(false)
 
@@ -53,10 +54,12 @@ export function ArticleSection() {
   useEffect(() => {
     let cancelled = false
     isLoadingMoreRef.current = false
+    setIsLoadingMore(false)
 
     ;(async () => {
       try {
         setFetchError('')
+        setHasMore(false)
         const data = await getPosts({
           page: 1,
           limit: POSTS_PER_PAGE,
@@ -90,7 +93,7 @@ export function ArticleSection() {
     if (isLoading || isLoadingMoreRef.current || !hasMore) return
 
     isLoadingMoreRef.current = true
-    setIsLoading(true)
+    setIsLoadingMore(true)
 
     const nextPage = page + 1
 
@@ -111,7 +114,7 @@ export function ArticleSection() {
       console.error('Error fetching posts:', error)
     } finally {
       isLoadingMoreRef.current = false
-      setIsLoading(false)
+      setIsLoadingMore(false)
     }
   }
 
@@ -240,9 +243,9 @@ export function ArticleSection() {
             type="button"
             onClick={handleLoadMore}
             className="font-medium underline hover:text-muted-foreground"
-            disabled={isLoading}
+            disabled={isLoadingMore}
           >
-            {isLoading ? 'Loading...' : 'View more'}
+            {isLoadingMore ? 'Loading...' : 'View more'}
           </button>
         </div>
       )}

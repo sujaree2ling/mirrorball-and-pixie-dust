@@ -1,19 +1,13 @@
+import {
+  getUser as fetchUserFromApi,
+  login as loginWithApi,
+  register as registerWithApi,
+  resetPassword as resetPasswordWithApi,
+} from '@/api/authApi'
+
 const TOKEN_KEY = 'access_token'
-const USERS_KEY = 'registered_users'
 const USER_KEY = 'current_user'
 const DEFAULT_AVATAR = '/author-icon.jpg'
-
-function getUsers() {
-  try {
-    return JSON.parse(localStorage.getItem(USERS_KEY) || '[]')
-  } catch {
-    return []
-  }
-}
-
-function saveUsers(users) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users))
-}
 
 export function saveToken(token) {
   localStorage.setItem(TOKEN_KEY, token)
@@ -27,11 +21,21 @@ export function clearToken() {
   localStorage.removeItem(TOKEN_KEY)
 }
 
+function normalizeUser(user) {
+  return {
+    id: user.id,
+    email: user.email,
+    username: user.username,
+    name: user.name,
+    role: user.role ?? 'user',
+    avatar: user.avatar || user.profilePic || DEFAULT_AVATAR,
+    profilePic: user.profilePic ?? null,
+    bio: user.bio ?? '',
+  }
+}
+
 export function saveCurrentUser(user) {
-  localStorage.setItem(
-    USER_KEY,
-    JSON.stringify({ ...user, avatar: user.avatar || DEFAULT_AVATAR }),
-  )
+  localStorage.setItem(USER_KEY, JSON.stringify(normalizeUser(user)))
 }
 
 export function getCurrentUser() {
@@ -53,47 +57,46 @@ export function isLoggedIn() {
   return Boolean(getToken())
 }
 
-export function registerUser({ name, username, email, password }) {
-  const users = getUsers()
-  const normalizedEmail = email.trim().toLowerCase()
-  const normalizedUsername = username.trim().toLowerCase()
-
-  if (users.some((user) => user.email === normalizedEmail)) {
-    throw new Error('Email is already taken')
-  }
-
-  if (users.some((user) => user.username.toLowerCase() === normalizedUsername)) {
-    throw new Error('Username is already taken')
-  }
-
-  users.push({
+export async function registerUser({ name, username, email, password }) {
+  await registerWithApi({
     name: name.trim(),
     username: username.trim(),
-    email: normalizedEmail,
+    email: email.trim().toLowerCase(),
+    password,
+  })
+}
+
+export async function loginUser({ email, password }) {
+  const loginData = await loginWithApi({
+    email: email.trim().toLowerCase(),
     password,
   })
 
-  saveUsers(users)
-}
+  const token = loginData.access_token
+  const apiUser = await fetchUserFromApi(token)
+  const user = normalizeUser(apiUser)
 
-export function loginUser({ email, password }) {
-  const user = getUsers().find(
-    (item) => item.email === email.trim().toLowerCase(),
-  )
-
-  if (!user || user.password !== password) {
-    throw new Error('Invalid credentials')
-  }
+  saveToken(token)
+  saveCurrentUser(user)
 
   return {
-    access_token: `local-${user.email}`,
-    user: {
-      name: user.name,
-      username: user.username,
-      email: user.email,
-      avatar: user.avatar || DEFAULT_AVATAR,
-      bio: user.bio ?? '',
-    },
+    access_token: token,
+    user,
+  }
+}
+
+export async function refreshCurrentUser() {
+  const token = getToken()
+  if (!token) return null
+
+  try {
+    const apiUser = await fetchUserFromApi(token)
+    const user = normalizeUser(apiUser)
+    saveCurrentUser(user)
+    return user
+  } catch {
+    logoutUser()
+    return null
   }
 }
 
@@ -101,52 +104,34 @@ export function updateUserProfile({ name, username, avatar, bio }) {
   const currentUser = getCurrentUser()
   if (!currentUser) throw new Error('Not logged in')
 
-  const users = getUsers()
-  const userIndex = users.findIndex((user) => user.email === currentUser.email)
-  if (userIndex === -1) throw new Error('User not found')
-
-  const normalizedUsername = username.trim().toLowerCase()
-  const usernameTaken = users.some(
-    (user, index) =>
-      index !== userIndex && user.username.toLowerCase() === normalizedUsername,
-  )
-
-  if (usernameTaken) {
-    throw new Error('Username is already taken')
-  }
-
-  users[userIndex] = {
-    ...users[userIndex],
+  const updatedUser = normalizeUser({
+    ...currentUser,
     name: name.trim(),
     username: username.trim(),
-    avatar: avatar || users[userIndex].avatar || DEFAULT_AVATAR,
-    bio: bio ?? users[userIndex].bio ?? '',
-  }
-
-  saveUsers(users)
-  saveCurrentUser({
-    name: users[userIndex].name,
-    username: users[userIndex].username,
-    email: users[userIndex].email,
-    avatar: users[userIndex].avatar,
-    bio: users[userIndex].bio,
+    avatar: avatar || currentUser.avatar || DEFAULT_AVATAR,
+    bio: bio ?? currentUser.bio ?? '',
   })
 
-  return getCurrentUser()
+  saveCurrentUser(updatedUser)
+  return updatedUser
 }
 
-export function resetUserPassword({ currentPassword, newPassword }) {
-  const currentUser = getCurrentUser()
-  if (!currentUser) throw new Error('Not logged in')
+export async function resetUserPassword({ currentPassword, newPassword }) {
+  const token = getToken()
+  if (!token) throw new Error('Not logged in')
 
-  const users = getUsers()
-  const userIndex = users.findIndex((user) => user.email === currentUser.email)
-  if (userIndex === -1) throw new Error('User not found')
-
-  if (users[userIndex].password !== currentPassword) {
-    throw new Error('Current password is incorrect')
+  try {
+    await resetPasswordWithApi(token, {
+      oldPassword: currentPassword,
+      newPassword,
+    })
+  } catch (error) {
+    if (
+      error.message.toLowerCase().includes('invalid old password') ||
+      error.message.toLowerCase().includes('old password')
+    ) {
+      throw new Error('Current password is incorrect')
+    }
+    throw error
   }
-
-  users[userIndex].password = newPassword
-  saveUsers(users)
 }

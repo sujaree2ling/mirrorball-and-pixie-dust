@@ -39,7 +39,7 @@ export function SignUpPage() {
     setIsSubmitting(true)
 
     try {
-      registerUser(form)
+      await registerUser(form)
       setIsSuccess(true)
     } catch (error) {
       setErrors(mapRegisterApiError(error.message))

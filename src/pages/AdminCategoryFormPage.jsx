@@ -18,18 +18,33 @@ export function AdminCategoryFormPage({ mode = 'create' }) {
   useEffect(() => {
     if (!isEdit || !id) return
 
-    const category = getCategory(id)
+    let cancelled = false
 
-    if (!category) {
-      navigate('/admin/category', { replace: true })
-      return
+    ;(async () => {
+      try {
+        const category = await getCategory(id)
+        if (cancelled) return
+
+        if (!category) {
+          navigate('/admin/category', { replace: true })
+          return
+        }
+
+        setName(category.name)
+      } catch (loadError) {
+        console.error('Error loading category:', loadError)
+        if (!cancelled) navigate('/admin/category', { replace: true })
+      } finally {
+        if (!cancelled) setIsLoading(false)
+      }
+    })()
+
+    return () => {
+      cancelled = true
     }
-
-    setName(category.name)
-    setIsLoading(false)
   }, [id, isEdit, navigate])
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!name.trim()) {
       setError('Category name is required')
       return
@@ -39,9 +54,9 @@ export function AdminCategoryFormPage({ mode = 'create' }) {
 
     try {
       if (isEdit) {
-        updateCategory(id, name)
+        await updateCategory(id, name)
       } else {
-        createCategory(name)
+        await createCategory(name)
       }
 
       navigate('/admin/category', {
@@ -67,7 +82,7 @@ export function AdminCategoryFormPage({ mode = 'create' }) {
 
   if (isLoading) {
     return (
-      <AdminPanelLayout title="Create category" activePage="/admin/category">
+      <AdminPanelLayout title={isEdit ? 'Edit category' : 'Create category'} activePage="/admin/category">
         <p className="text-sm text-[#75716B]">Loading category...</p>
       </AdminPanelLayout>
     )
@@ -75,7 +90,7 @@ export function AdminCategoryFormPage({ mode = 'create' }) {
 
   return (
     <AdminPanelLayout
-      title="Create category"
+      title={isEdit ? 'Edit category' : 'Create category'}
       activePage="/admin/category"
       headerAction={
         <button
