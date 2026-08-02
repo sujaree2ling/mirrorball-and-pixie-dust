@@ -25,6 +25,7 @@ export function AdminCategoryPage() {
   const [categories, setCategories] = useState([])
   const [keyword, setKeyword] = useState('')
   const [debouncedKeyword, setDebouncedKeyword] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
   const [deleteTarget, setDeleteTarget] = useState(null)
 
   useEffect(() => {
@@ -48,18 +49,43 @@ export function AdminCategoryPage() {
   }, [keyword])
 
   useEffect(() => {
-    setCategories(fetchCategories({ keyword: debouncedKeyword }))
+    let cancelled = false
+
+    ;(async () => {
+      setIsLoading(true)
+      try {
+        const data = await fetchCategories({ keyword: debouncedKeyword })
+        if (!cancelled) setCategories(data)
+      } catch (error) {
+        console.error('Error fetching categories:', error)
+        if (!cancelled) setCategories([])
+      } finally {
+        if (!cancelled) setIsLoading(false)
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
   }, [debouncedKeyword])
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!deleteTarget) return
 
-    deleteCategory(deleteTarget.id)
-    setDeleteTarget(null)
-    setCategories((current) => current.filter((category) => category.id !== deleteTarget.id))
-    toast.success('Delete category', {
-      description: 'Category has been successfully deleted.',
-    })
+    try {
+      await deleteCategory(deleteTarget.id)
+      setDeleteTarget(null)
+      setCategories((current) =>
+        current.filter((category) => category.id !== deleteTarget.id),
+      )
+      toast.success('Delete category', {
+        description: 'Category has been successfully deleted.',
+      })
+    } catch (error) {
+      toast.error('Delete category', {
+        description: error.message || 'Unable to delete category.',
+      })
+    }
   }
 
   return (
@@ -98,7 +124,13 @@ export function AdminCategoryPage() {
             </tr>
           </thead>
           <tbody>
-            {categories.length === 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan={2} className="px-6 py-12 text-center text-[#75716B]">
+                  Loading categories...
+                </td>
+              </tr>
+            ) : categories.length === 0 ? (
               <tr>
                 <td colSpan={2} className="px-6 py-12 text-center text-[#75716B]">
                   No categories found.

@@ -65,11 +65,11 @@ export function ResetPasswordPage() {
     setShowConfirm(true)
   }
 
-  const handleConfirmReset = () => {
+  const handleConfirmReset = async () => {
     setIsSubmitting(true)
 
     try {
-      resetUserPassword({
+      await resetUserPassword({
         currentPassword: form.currentPassword,
         newPassword: form.newPassword,
       })
@@ -86,7 +86,7 @@ export function ResetPasswordPage() {
       if (error.message === 'Current password is incorrect') {
         setErrors({ currentPassword: 'Current password is incorrect' })
       } else {
-        setErrors({ form: 'Something went wrong. Please try again.' })
+        setErrors({ form: error.message || 'Something went wrong. Please try again.' })
       }
     } finally {
       setIsSubmitting(false)

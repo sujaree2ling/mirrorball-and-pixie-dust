@@ -1,13 +1,16 @@
-const CATEGORIES_KEY = 'admin_categories'
-const CATEGORY_RENAMES_KEY = 'admin_category_renames'
-const LOCAL_ARTICLES_KEY = 'admin_local_articles'
-const OVERRIDES_KEY = 'admin_article_overrides'
+import { updatePost } from '@/api/blogApi'
+import {
+  fetchAllAdminPosts,
+  invalidateAdminPostsCache,
+} from '@/lib/adminPostsCache'
 
-const DEFAULT_CATEGORIES = [
-  { id: 'default-cat', name: 'Cat' },
-  { id: 'default-general', name: 'General' },
-  { id: 'default-inspiration', name: 'Inspiration' },
+const EXTRAS_KEY = 'admin_category_extras'
+const LEGACY_KEYS = [
+  'admin_categories',
+  'admin_category_renames',
 ]
+
+const FALLBACK_CATEGORIES = ['Taylor Swift', 'Disney']
 
 function readJson(key, fallback) {
   try {
@@ -21,85 +24,71 @@ function writeJson(key, value) {
   localStorage.setItem(key, JSON.stringify(value))
 }
 
-function seedCategoriesIfNeeded() {
-  const stored = readJson(CATEGORIES_KEY, null)
+function clearLegacyCategoryStorage() {
+  LEGACY_KEYS.forEach((key) => localStorage.removeItem(key))
+}
 
-  if (!stored) {
-    writeJson(CATEGORIES_KEY, DEFAULT_CATEGORIES)
-    return DEFAULT_CATEGORIES
+function categoryIdFromName(name) {
+  return encodeURIComponent(name)
+}
+
+function categoryNameFromId(id) {
+  try {
+    return decodeURIComponent(String(id))
+  } catch {
+    return String(id)
   }
-
-  return stored
 }
 
-export function getCategories() {
-  return seedCategoriesIfNeeded()
+function getExtras() {
+  return readJson(EXTRAS_KEY, []).filter(
+    (name) => typeof name === 'string' && name.trim(),
+  )
 }
 
-export function getCategoryNames() {
-  return getCategories().map((category) => category.name)
-}
-
-export function resolveCategoryName(name) {
-  const renames = readJson(CATEGORY_RENAMES_KEY, {})
-  let resolved = name
-  const visited = new Set()
-
-  while (renames[resolved] && !visited.has(resolved)) {
-    visited.add(resolved)
-    resolved = renames[resolved]
-  }
-
-  return resolved
-}
-
-export function getSourceCategoryNames(displayName) {
-  const names = new Set([displayName])
-  const renames = readJson(CATEGORY_RENAMES_KEY, {})
-
-  Object.keys(renames).forEach((oldName) => {
-    if (resolveCategoryName(oldName) === displayName) {
-      names.add(oldName)
-    }
-  })
-
-  return [...names]
-}
-
-function syncRenamedCategory(oldName, newName) {
-  const renames = readJson(CATEGORY_RENAMES_KEY, {})
-  renames[oldName] = newName
-  writeJson(CATEGORY_RENAMES_KEY, renames)
-
-  const localArticles = readJson(LOCAL_ARTICLES_KEY, [])
+function saveExtras(names) {
   writeJson(
-    LOCAL_ARTICLES_KEY,
-    localArticles.map((article) =>
-      article.category === oldName ? { ...article, category: newName } : article,
-    ),
+    EXTRAS_KEY,
+    [...new Set(names.map((name) => name.trim()).filter(Boolean))],
+  )
+}
+
+function toCategory(name, source) {
+  return {
+    id: categoryIdFromName(name),
+    name,
+    source,
+  }
+}
+
+function buildCategories(posts) {
+  clearLegacyCategoryStorage()
+
+  const fromPosts = [
+    ...new Set(posts.map((post) => post.category).filter(Boolean)),
+  ]
+
+  const extras = getExtras().filter(
+    (name) =>
+      !fromPosts.some((postName) => postName.toLowerCase() === name.toLowerCase()),
   )
 
-  const overrides = readJson(OVERRIDES_KEY, {})
-  let hasChanges = false
+  const fallbacks = FALLBACK_CATEGORIES.filter(
+    (name) =>
+      !fromPosts.some((postName) => postName.toLowerCase() === name.toLowerCase()) &&
+      !extras.some((extra) => extra.toLowerCase() === name.toLowerCase()),
+  )
 
-  Object.keys(overrides).forEach((id) => {
-    if (overrides[id].category === oldName) {
-      overrides[id] = { ...overrides[id], category: newName }
-      hasChanges = true
-    }
-  })
-
-  if (hasChanges) {
-    writeJson(OVERRIDES_KEY, overrides)
-  }
+  return [
+    ...fromPosts.map((name) => toCategory(name, 'api')),
+    ...extras.map((name) => toCategory(name, 'extra')),
+    ...fallbacks.map((name) => toCategory(name, 'fallback')),
+  ].sort((a, b) => a.name.localeCompare(b.name))
 }
 
-export function getCategory(id) {
-  return getCategories().find((category) => String(category.id) === String(id)) ?? null
-}
-
-export function fetchCategories({ keyword = '' } = {}) {
-  let categories = getCategories()
+export async function fetchCategories({ keyword = '' } = {}) {
+  const posts = await fetchAllAdminPosts()
+  let categories = buildCategories(posts)
 
   if (keyword.trim()) {
     const query = keyword.trim().toLowerCase()
@@ -108,61 +97,123 @@ export function fetchCategories({ keyword = '' } = {}) {
     )
   }
 
-  return categories.sort((a, b) => a.name.localeCompare(b.name))
+  return categories
 }
 
-export function createCategory(name) {
-  const trimmedName = name.trim()
-  const categories = getCategories()
-
-  if (categories.some((category) => category.name.toLowerCase() === trimmedName.toLowerCase())) {
-    throw new Error('Category name already exists')
-  }
-
-  const category = {
-    id: `local-${Date.now()}`,
-    name: trimmedName,
-  }
-
-  writeJson(CATEGORIES_KEY, [category, ...categories])
-  return category
+export async function getCategoryNames() {
+  const categories = await fetchCategories()
+  return categories.map((category) => category.name)
 }
 
-export function updateCategory(id, name) {
-  const trimmedName = name.trim()
-  const categories = getCategories()
-  const index = categories.findIndex((category) => String(category.id) === String(id))
+export function resolveCategoryName(name) {
+  return name
+}
 
-  if (index === -1) {
-    throw new Error('Category not found')
+export function getSourceCategoryNames(displayName) {
+  return [displayName]
+}
+
+export async function getCategory(id) {
+  const name = categoryNameFromId(id)
+  const categories = await fetchCategories()
+  return (
+    categories.find(
+      (category) =>
+        String(category.id) === String(id) ||
+        category.name.toLowerCase() === name.toLowerCase(),
+    ) ?? null
+  )
+}
+
+export async function createCategory(name) {
+  const trimmedName = name.trim()
+  if (!trimmedName) {
+    throw new Error('Category name is required')
   }
 
+  const existing = await fetchCategories()
   if (
-    categories.some(
-      (category, categoryIndex) =>
-        categoryIndex !== index &&
-        category.name.toLowerCase() === trimmedName.toLowerCase(),
+    existing.some(
+      (category) => category.name.toLowerCase() === trimmedName.toLowerCase(),
     )
   ) {
     throw new Error('Category name already exists')
   }
 
-  const oldName = categories[index].name
-  const updated = { ...categories[index], name: trimmedName }
-  categories[index] = updated
-  writeJson(CATEGORIES_KEY, categories)
-
-  if (oldName !== trimmedName) {
-    syncRenamedCategory(oldName, trimmedName)
-  }
-
-  return updated
+  saveExtras([trimmedName, ...getExtras()])
+  return toCategory(trimmedName, 'extra')
 }
 
-export function deleteCategory(id) {
-  const categories = getCategories().filter(
-    (category) => String(category.id) !== String(id),
+export async function updateCategory(id, name) {
+  const trimmedName = name.trim()
+  if (!trimmedName) {
+    throw new Error('Category name is required')
+  }
+
+  const category = await getCategory(id)
+  if (!category) {
+    throw new Error('Category not found')
+  }
+
+  const oldName = category.name
+  if (oldName === trimmedName) {
+    return toCategory(trimmedName, category.source)
+  }
+
+  const existing = await fetchCategories()
+  if (
+    existing.some(
+      (item) =>
+        item.name.toLowerCase() === trimmedName.toLowerCase() &&
+        item.name.toLowerCase() !== oldName.toLowerCase(),
+    )
+  ) {
+    throw new Error('Category name already exists')
+  }
+
+  const posts = await fetchAllAdminPosts()
+  const postsToUpdate = posts.filter((post) => post.category === oldName)
+
+  await Promise.all(
+    postsToUpdate.map((post) =>
+      updatePost(post.id, {
+        title: post.title,
+        description: post.description,
+        content: post.content,
+        category: trimmedName,
+        image: post.image,
+        status: post.status,
+        imagePosition: post.imagePosition,
+        author: post.author,
+        likes: post.likes,
+      }),
+    ),
   )
 
-  writeJson(CATEGORIES_KEY, categories)
+  saveExtras(
+    getExtras().map((extra) => (extra === oldName ? trimmedName : extra)),
+  )
+  invalidateAdminPostsCache()
+
+  return toCategory(trimmedName, postsToUpdate.length > 0 ? 'api' : 'extra')
+}
+
+export async function deleteCategory(id) {
+  const category = await getCategory(id)
+  if (!category) {
+    throw new Error('Category not found')
+  }
+
+  const posts = await fetchAllAdminPosts()
+  const postsUsingCategory = posts.filter(
+    (post) => post.category === category.name,
+  )
+
+  if (postsUsingCategory.length > 0) {
+    throw new Error(
+      'Cannot delete a category that is still used by articles in Supabase',
+    )
+  }
+
+  saveExtras(getExtras().filter((name) => name !== category.name))
 }

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
-import { loginUser, saveCurrentUser, saveToken } from '@/lib/auth'
+import { loginUser } from '@/lib/auth'
 import { AuthLayout } from '@/components/AuthLayout'
 import { FormField } from '@/components/FormField'
 import {
@@ -60,9 +60,7 @@ export function LoginPage() {
     setIsSubmitting(true)
 
     try {
-      const data = loginUser(form)
-      saveToken(data.access_token)
-      saveCurrentUser(data.user)
+      await loginUser(form)
       navigate('/')
     } catch {
       setErrors(mapLoginApiError())

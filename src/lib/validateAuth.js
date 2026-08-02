@@ -41,17 +41,26 @@ export function validateLogin({ email, password }) {
 }
 
 export function mapRegisterApiError(message) {
-  const lower = message.toLowerCase()
+  const lower = (message || '').toLowerCase()
 
-  if (lower.includes('email') && (lower.includes('exist') || lower.includes('used') || lower.includes('taken'))) {
+  if (
+    lower.includes('email') &&
+    (lower.includes('exist') || lower.includes('used') || lower.includes('taken'))
+  ) {
     return { email: 'Email is already taken, please try another one.' }
   }
 
-  if (lower.includes('username') && (lower.includes('exist') || lower.includes('used') || lower.includes('taken'))) {
+  if (
+    lower.includes('username') &&
+    (lower.includes('exist') ||
+      lower.includes('used') ||
+      lower.includes('taken') ||
+      lower.includes('already'))
+  ) {
     return { username: 'Username is already taken, please try another username.' }
   }
 
-  return { form: message }
+  return { form: message || 'Unable to create account. Please try again.' }
 }
 
 export function mapLoginApiError() {

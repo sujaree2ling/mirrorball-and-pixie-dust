@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
+  ARTICLE_IMAGE_POSITIONS,
   createArticle,
   deleteArticle,
   getAdminArticle,
@@ -39,6 +40,7 @@ const emptyForm = {
   content: '',
   category: '',
   image: '',
+  imagePosition: 'center',
 }
 
 export function AdminArticleFormPage({ mode = 'create' }) {
@@ -47,15 +49,43 @@ export function AdminArticleFormPage({ mode = 'create' }) {
   const fileInputRef = useRef(null)
   const isEdit = mode === 'edit'
   const authorName = getCurrentUser()?.name ?? ''
-  const articleCategories = getArticleCategories()
 
+  const [articleCategories, setArticleCategories] = useState([])
   const [form, setForm] = useState(emptyForm)
   const [articleStatus, setArticleStatus] = useState('draft')
   const [errors, setErrors] = useState({})
-  const [isLoading, setIsLoading] = useState(isEdit)
+  const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submittingAs, setSubmittingAs] = useState(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+
+    ;(async () => {
+      try {
+        const categories = await getArticleCategories()
+        if (cancelled) return
+
+        setArticleCategories(categories)
+
+        if (!isEdit) {
+          setForm((prev) => ({
+            ...prev,
+            category: prev.category || categories[0] || '',
+          }))
+          setIsLoading(false)
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error)
+        if (!cancelled && !isEdit) setIsLoading(false)
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [isEdit])
 
   useEffect(() => {
     if (!isEdit || !id) return
@@ -78,6 +108,7 @@ export function AdminArticleFormPage({ mode = 'create' }) {
           content: article.content,
           category: article.category,
           image: article.image,
+          imagePosition: article.imagePosition ?? 'center',
         })
         setArticleStatus(article.status)
       } catch (error) {
@@ -112,6 +143,7 @@ export function AdminArticleFormPage({ mode = 'create' }) {
     reader.onload = () => {
       if (typeof reader.result === 'string') {
         setForm((prev) => ({ ...prev, image: reader.result }))
+        setErrors((prev) => ({ ...prev, image: undefined }))
       }
     }
     reader.readAsDataURL(file)
@@ -124,6 +156,7 @@ export function AdminArticleFormPage({ mode = 'create' }) {
     if (!form.description.trim()) nextErrors.description = 'Introduction is required'
     if (!form.content.trim()) nextErrors.content = 'Content is required'
     if (!form.category) nextErrors.category = 'Category is required'
+    if (!form.image.trim()) nextErrors.image = 'Thumbnail image is required'
 
     return nextErrors
   }
@@ -146,9 +179,9 @@ export function AdminArticleFormPage({ mode = 'create' }) {
       }
 
       if (isEdit) {
-        updateArticle(id, payload)
+        await updateArticle(id, payload)
       } else {
-        createArticle(payload)
+        await createArticle(payload)
       }
 
       const isPublished = nextStatus === 'published'
@@ -179,18 +212,22 @@ export function AdminArticleFormPage({ mode = 'create' }) {
     }
   }
 
-  const handleDelete = () => {
-    deleteArticle(id)
-    setShowDeleteConfirm(false)
-    navigate('/admin', {
-      replace: true,
-      state: {
-        toast: {
-          title: 'Article deleted!',
-          description: 'Article deleted successfully.',
+  const handleDelete = async () => {
+    try {
+      await deleteArticle(id)
+      setShowDeleteConfirm(false)
+      navigate('/admin', {
+        replace: true,
+        state: {
+          toast: {
+            title: 'Article deleted!',
+            description: 'Article deleted successfully.',
+          },
         },
-      },
-    })
+      })
+    } catch (error) {
+      console.error('Error deleting article:', error)
+    }
   }
 
   if (isLoading) {
@@ -238,6 +275,7 @@ export function AdminArticleFormPage({ mode = 'create' }) {
                 src={form.image}
                 alt={form.title || 'Article thumbnail'}
                 className="h-full w-full object-cover"
+                style={{ objectPosition: form.imagePosition ?? 'center' }}
               />
             ) : (
               <ImageIcon size={40} className="text-[#DAD6D1]" strokeWidth={1.25} />
@@ -250,13 +288,41 @@ export function AdminArticleFormPage({ mode = 'create' }) {
             onChange={handleImageChange}
             className="hidden"
           />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="cursor-pointer rounded-full border border-[#26231E] bg-white px-5 py-2 text-[15px] font-medium text-[#26231E] transition-opacity hover:opacity-85"
-          >
-            Upload thumbnail image
-          </button>
+          <div className="flex flex-col gap-3">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="cursor-pointer rounded-full border border-[#26231E] bg-white px-5 py-2 text-[15px] font-medium text-[#26231E] transition-opacity hover:opacity-85"
+            >
+              Upload thumbnail image
+            </button>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="imagePosition" className="text-sm font-medium text-[#75716B]">
+                Image position
+              </label>
+              <Select
+                value={form.imagePosition}
+                onValueChange={(value) => {
+                  setForm((prev) => ({ ...prev, imagePosition: value }))
+                }}
+              >
+                <SelectTrigger
+                  id="imagePosition"
+                  className="h-11 w-full border border-[#DAD6D1] bg-white text-[15px] sm:w-[220px]"
+                >
+                  <SelectValue placeholder="Select position" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ARTICLE_IMAGE_POSITIONS.map((position) => (
+                    <SelectItem key={position} value={position} className="capitalize">
+                      {position}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {errors.image && <p className="text-sm text-[#EB5164]">{errors.image}</p>}
+          </div>
         </div>
 
         <div className="mt-8 flex flex-col gap-6">

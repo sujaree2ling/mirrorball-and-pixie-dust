@@ -1,28 +1,54 @@
 import axios from 'axios'
 
-const BASE_URL = 'https://blog-post-project-api.vercel.app'
+const BASE_URL = import.meta.env.VITE_API_BASE_URL
 
-export async function register({ name, username, email, password }) {
-  const response = await axios.post(`${BASE_URL}/register`, {
-    name,
-    username,
-    email,
-    password,
-  })
-  return response.data
+function getErrorMessage(error, fallback = 'Something went wrong') {
+  return error.response?.data?.error || error.message || fallback
+}
+
+export async function register(payload) {
+  try {
+    const response = await axios.post(`${BASE_URL}/auth/register`, payload)
+    return response.data
+  } catch (error) {
+    throw new Error(getErrorMessage(error, 'Failed to create user. Please try again.'))
+  }
 }
 
 export async function login({ email, password }) {
-  const response = await axios.post(`${BASE_URL}/login`, { email, password })
-  return response.data
+  try {
+    const response = await axios.post(`${BASE_URL}/auth/login`, { email, password })
+    return response.data
+  } catch (error) {
+    throw new Error(
+      getErrorMessage(
+        error,
+        "Your password is incorrect or this email doesn't exist",
+      ),
+    )
+  }
 }
 
-export function getAuthErrorMessage(error) {
-  const data = error.response?.data
+export async function getUser(token) {
+  try {
+    const response = await axios.get(`${BASE_URL}/auth/get-user`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    return response.data
+  } catch (error) {
+    throw new Error(getErrorMessage(error, 'Unauthorized or token expired'))
+  }
+}
 
-  if (typeof data === 'string') return data
-  if (data?.message) return data.message
-  if (data?.error) return data.error
-
-  return 'Something went wrong. Please try again.'
+export async function resetPassword(token, { oldPassword, newPassword }) {
+  try {
+    const response = await axios.put(
+      `${BASE_URL}/auth/reset-password`,
+      { oldPassword, newPassword },
+      { headers: { Authorization: `Bearer ${token}` } },
+    )
+    return response.data
+  } catch (error) {
+    throw new Error(getErrorMessage(error, 'Failed to reset password'))
+  }
 }
