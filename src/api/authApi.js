@@ -29,24 +29,21 @@ export async function login({ email, password }) {
   }
 }
 
-export async function getUser(token) {
+export async function getUser() {
   try {
-    const response = await axios.get(`${BASE_URL}/auth/get-user`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    const response = await axios.get(`${BASE_URL}/auth/get-user`)
     return response.data
   } catch (error) {
     throw new Error(getErrorMessage(error, 'Unauthorized or token expired'))
   }
 }
 
-export async function resetPassword(token, { oldPassword, newPassword }) {
+export async function resetPassword({ oldPassword, newPassword }) {
   try {
-    const response = await axios.put(
-      `${BASE_URL}/auth/reset-password`,
-      { oldPassword, newPassword },
-      { headers: { Authorization: `Bearer ${token}` } },
-    )
+    const response = await axios.put(`${BASE_URL}/auth/reset-password`, {
+      oldPassword,
+      newPassword,
+    })
     return response.data
   } catch (error) {
     throw new Error(getErrorMessage(error, 'Failed to reset password'))
