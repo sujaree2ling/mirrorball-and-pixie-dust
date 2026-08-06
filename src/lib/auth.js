@@ -3,11 +3,13 @@ import {
   login as loginWithApi,
   register as registerWithApi,
   resetPassword as resetPasswordWithApi,
+  updateProfile as updateProfileWithApi,
 } from '@/api/authApi'
 
 const TOKEN_KEY = 'access_token'
 const USER_KEY = 'current_user'
-const DEFAULT_AVATAR = '/author-icon.jpg'
+const DEFAULT_AVATAR = '/icon.png'
+export const ADMIN_EMAIL = 'linglings@gmail.com'
 
 export function saveToken(token) {
   localStorage.setItem(TOKEN_KEY, token)
@@ -22,14 +24,18 @@ export function clearToken() {
 }
 
 function normalizeUser(user) {
+  const profilePic = user.profilePic || user.avatar || null
+  const email = (user.email || '').trim().toLowerCase()
+  const roleFromEmail = email === ADMIN_EMAIL ? 'admin' : null
+
   return {
     id: user.id,
-    email: user.email,
+    email,
     username: user.username,
     name: user.name,
-    role: user.role ?? 'user',
-    avatar: user.avatar || user.profilePic || DEFAULT_AVATAR,
-    profilePic: user.profilePic ?? null,
+    role: roleFromEmail || user.role || 'user',
+    avatar: profilePic || DEFAULT_AVATAR,
+    profilePic: profilePic,
     bio: user.bio ?? '',
   }
 }
@@ -57,6 +63,11 @@ export function isLoggedIn() {
   return Boolean(getToken())
 }
 
+export function isAdmin(user = getCurrentUser()) {
+  if (!user) return false
+  return (user.email || '').trim().toLowerCase() === ADMIN_EMAIL
+}
+
 export async function registerUser({ name, username, email, password }) {
   await registerWithApi({
     name: name.trim(),
@@ -67,6 +78,9 @@ export async function registerUser({ name, username, email, password }) {
 }
 
 export async function loginUser({ email, password }) {
+  // Clear any previous session so a failed switch cannot leave a stale user
+  logoutUser()
+
   const loginData = await loginWithApi({
     email: email.trim().toLowerCase(),
     password,
@@ -100,15 +114,20 @@ export async function refreshCurrentUser() {
   }
 }
 
-export function updateUserProfile({ name, username, avatar, bio }) {
+export async function updateUserProfile({ name, username, bio, imageFile }) {
   const currentUser = getCurrentUser()
   if (!currentUser) throw new Error('Not logged in')
 
+  const { user } = await updateProfileWithApi(
+    {
+      name: name.trim(),
+      username: username.trim(),
+    },
+    imageFile,
+  )
+
   const updatedUser = normalizeUser({
-    ...currentUser,
-    name: name.trim(),
-    username: username.trim(),
-    avatar: avatar || currentUser.avatar || DEFAULT_AVATAR,
+    ...user,
     bio: bio ?? currentUser.bio ?? '',
   })
 

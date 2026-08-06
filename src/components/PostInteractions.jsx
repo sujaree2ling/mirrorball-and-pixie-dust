@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Copy, X } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -8,14 +9,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { getCurrentUser, isLoggedIn } from '@/lib/auth'
 
-const IS_LOGGED_IN = false
-
-const comments = [
+const INITIAL_COMMENTS = [
   {
     id: 1,
     author: 'Jacob Lash',
-    avatar: '/author-icon.jpg',
+    avatar: '/icon.png',
     date: '12 September 2024 at 18:30',
     content:
       'I loved this article! It really captures how independent yet loving cats can be. The purring section was super interesting.',
@@ -23,7 +23,7 @@ const comments = [
   {
     id: 2,
     author: 'Ahri',
-    avatar: '/author-icon.jpg',
+    avatar: '/icon.png',
     date: '12 September 2024 at 18:30',
     content:
       "Such a great read. I've always wondered how cat slow blinks work as a sign of trust — this explained it perfectly.",
@@ -31,12 +31,23 @@ const comments = [
   {
     id: 3,
     author: 'Mimi mama',
-    avatar: '/author-icon.jpg',
+    avatar: '/icon.png',
     date: '12 September 2024 at 18:30',
     content:
       'Appreciated the section on cat purring and how it could help with healing. Definitely sharing this with friends who have cats!',
   },
 ]
+
+function formatCommentDate(date = new Date()) {
+  return date.toLocaleString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).replace(',', ' at')
+}
 
 function LikeIcon() {
   return (
@@ -86,18 +97,42 @@ function XIcon({ size = 16 }) {
 }
 
 export function PostInteractions({ likes = 0 }) {
+  const navigate = useNavigate()
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [liked, setLiked] = useState(false)
+  const [likeCount, setLikeCount] = useState(likes)
+  const [commentText, setCommentText] = useState('')
+  const [comments, setComments] = useState(INITIAL_COMMENTS)
 
   const requireLogin = () => {
-    if (!IS_LOGGED_IN) {
+    if (!isLoggedIn()) {
       setDialogOpen(true)
       return true
     }
     return false
   }
 
+  const goToSignUp = () => {
+    setDialogOpen(false)
+    navigate('/signup')
+  }
+
+  const goToLogin = () => {
+    setDialogOpen(false)
+    navigate('/login')
+  }
+
   const handleLike = () => {
-    requireLogin()
+    if (requireLogin()) return
+
+    if (liked) {
+      setLiked(false)
+      setLikeCount((count) => Math.max(0, count - 1))
+      return
+    }
+
+    setLiked(true)
+    setLikeCount((count) => count + 1)
   }
 
   const handleCommentInteraction = () => {
@@ -105,7 +140,26 @@ export function PostInteractions({ likes = 0 }) {
   }
 
   const handleSend = () => {
-    requireLogin()
+    if (requireLogin()) return
+
+    const content = commentText.trim()
+    if (!content) {
+      toast.error('Please write a comment first')
+      return
+    }
+
+    const user = getCurrentUser()
+    const newComment = {
+      id: Date.now(),
+      author: user?.name || user?.username || 'User',
+      avatar: user?.avatar || '/icon.png',
+      date: formatCommentDate(),
+      content,
+    }
+
+    setComments((prev) => [newComment, ...prev])
+    setCommentText('')
+    toast.success('Comment posted')
   }
 
   const articleUrl = window.location.href
@@ -132,17 +186,24 @@ export function PostInteractions({ likes = 0 }) {
     window.open(shareUrls[platform], '_blank', 'noopener,noreferrer')
   }
 
+  const loggedIn = isLoggedIn()
+
   return (
     <div className="mb-12 border-t border-[#DAD6D1] pt-10">
       <div className="flex flex-col gap-4 rounded-xl bg-[#EFEEEB] px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <button
           type="button"
           onClick={handleLike}
-          aria-label={`Like post, ${likes} likes`}
-          className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-[#26231E] bg-white px-5 py-2.5 text-base font-medium text-[#26231E] transition-colors hover:bg-[#FAFAF9] sm:w-fit sm:justify-start"
+          aria-label={`Like post, ${likeCount} likes`}
+          aria-pressed={liked}
+          className={`inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border px-5 py-2.5 text-base font-medium transition-colors sm:w-fit sm:justify-start ${
+            liked
+              ? 'border-[#12B279] bg-[#DCFCE7] text-[#12B279] hover:bg-[#BBF7D0]'
+              : 'border-[#26231E] bg-white text-[#26231E] hover:bg-[#FAFAF9]'
+          }`}
         >
           <LikeIcon />
-          {likes}
+          {likeCount}
         </button>
 
         <div className="flex items-center gap-3">
@@ -189,7 +250,9 @@ export function PostInteractions({ likes = 0 }) {
         <div className="rounded-xl border border-[#DAD6D1] bg-white p-4 sm:relative sm:pb-16">
           <textarea
             placeholder="What are your thoughts?"
-            readOnly={!IS_LOGGED_IN}
+            value={commentText}
+            readOnly={!loggedIn}
+            onChange={(event) => setCommentText(event.target.value)}
             onFocus={handleCommentInteraction}
             onClick={handleCommentInteraction}
             className="min-h-[120px] w-full resize-none bg-transparent text-base text-[#26231E] outline-none placeholder:text-[#75716B]"
@@ -257,7 +320,7 @@ export function PostInteractions({ likes = 0 }) {
 
           <button
             type="button"
-            onClick={() => setDialogOpen(false)}
+            onClick={goToSignUp}
             className="mt-2 w-full cursor-pointer rounded-full border border-[#26231E] bg-[#26231E] px-6 py-3 text-[15px] font-medium text-white transition-opacity hover:opacity-85"
           >
             Create account
@@ -267,7 +330,7 @@ export function PostInteractions({ likes = 0 }) {
             Already have an account?{' '}
             <button
               type="button"
-              onClick={() => setDialogOpen(false)}
+              onClick={goToLogin}
               className="cursor-pointer font-medium text-[#26231E] underline underline-offset-2"
             >
               Log in

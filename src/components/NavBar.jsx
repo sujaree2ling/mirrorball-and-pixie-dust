@@ -7,7 +7,7 @@ import {
   MemberNavMenu,
   getMemberFromStorage,
 } from '@/components/MemberNavMenu'
-import { logoutUser } from '@/lib/auth'
+import { isAdmin, logoutUser } from '@/lib/auth'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +29,12 @@ export function NavBar({ activePage, variant = 'default' }) {
   useEffect(() => {
     setMobileMenuOpen(false)
   }, [location.pathname])
+
+  const isAuthPage =
+    variant === 'auth' ||
+    location.pathname === '/login' ||
+    location.pathname === '/signup'
+  const showMemberMenu = Boolean(member) && !isAuthPage
 
   const loginIsActive = activePage === 'login'
   const signUpIsActive = activePage === 'signup' || !activePage
@@ -66,10 +72,10 @@ export function NavBar({ activePage, variant = 'default' }) {
           to="/"
           className="text-2xl font-bold tracking-[-0.5px] text-[#26231E] no-underline"
         >
-          hh<span className="text-[#12B279]">.</span>
+          LingLingS<span className="text-[#12B279]">.</span>
         </Link>
 
-        {member ? (
+        {showMemberMenu ? (
           <>
             <button
               type="button"
@@ -81,7 +87,11 @@ export function NavBar({ activePage, variant = 'default' }) {
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
 
-            <MemberNavMenu user={member} onLogout={() => setMember(null)} />
+            <MemberNavMenu
+              user={member}
+              onLogout={() => setMember(null)}
+              showAdminPanel={isAdmin(member)}
+            />
           </>
         ) : (
           <>
@@ -139,11 +149,12 @@ export function NavBar({ activePage, variant = 'default' }) {
         )}
       </nav>
 
-      {member && mobileMenuOpen && (
+      {showMemberMenu && mobileMenuOpen && (
         <MemberMobileMenuPanel
           user={member}
           onLogout={handleLogout}
           onNavigate={() => setMobileMenuOpen(false)}
+          isAdmin={isAdmin(member)}
         />
       )}
     </header>

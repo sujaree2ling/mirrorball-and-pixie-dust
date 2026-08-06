@@ -24,28 +24,47 @@ export async function getPost(id) {
   return response.data
 }
 
-function toApiBody(payload) {
-  return {
-    title: payload.title,
-    description: payload.description,
-    content: payload.content,
-    category: payload.category,
-    image: payload.image,
-    status: payload.status,
-    image_position: payload.imagePosition ?? payload.image_position ?? 'center',
-    author: payload.author,
-    likes: payload.likes,
-    date: payload.date,
+function toFormData(payload, imageFile) {
+  const formData = new FormData()
+
+  formData.append('title', payload.title ?? '')
+  formData.append('description', payload.description ?? '')
+  formData.append('content', payload.content ?? '')
+  formData.append('category', payload.category ?? '')
+  formData.append('status', payload.status ?? 'published')
+  formData.append(
+    'image_position',
+    payload.imagePosition ?? payload.image_position ?? 'center',
+  )
+
+  if (payload.author) formData.append('author', payload.author)
+  if (payload.likes !== undefined && payload.likes !== null) {
+    formData.append('likes', String(payload.likes))
   }
+  if (payload.date) formData.append('date', payload.date)
+
+  if (imageFile) {
+    formData.append('imageFile', imageFile)
+  } else if (payload.image) {
+    formData.append('image', payload.image)
+  }
+
+  return formData
 }
 
-export async function createPost(payload) {
-  const response = await axios.post(`${BASE_URL}/posts`, toApiBody(payload))
+export async function createPost(payload, imageFile) {
+  const response = await axios.post(
+    `${BASE_URL}/posts`,
+    toFormData(payload, imageFile),
+  )
   return response.data.post
 }
 
-export async function updatePost(id, payload) {
-  const response = await axios.put(`${BASE_URL}/posts/${id}`, toApiBody(payload))
+export async function updatePost(id, payload, imageFile) {
+  const response = await axios.put(
+    `${BASE_URL}/posts/${id}`,
+    toFormData(payload, imageFile),
+  )
   return response.data.post
 }
 

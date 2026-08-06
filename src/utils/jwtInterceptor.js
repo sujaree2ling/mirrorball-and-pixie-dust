@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { toast } from 'sonner'
 
 const TOKEN_KEY = 'access_token'
 const USER_KEY = 'current_user'
@@ -38,6 +39,20 @@ export function jwtInterceptor() {
       ) {
         clearAuthStorage()
         window.location.href = '/login'
+      }
+
+      if (status === 403) {
+        const message =
+          error.response?.data?.error ||
+          'Admin only. You do not have permission to do this.'
+
+        if (!window.__adminOnlyToastShown) {
+          window.__adminOnlyToastShown = true
+          toast.error('Admin only', { description: message })
+          setTimeout(() => {
+            window.__adminOnlyToastShown = false
+          }, 2000)
+        }
       }
 
       return Promise.reject(error)
