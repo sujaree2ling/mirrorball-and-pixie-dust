@@ -2,7 +2,7 @@ export const ADMIN_NOTIFICATIONS = [
   {
     id: 1,
     author: 'Jacob Lash',
-    avatar: '/author-icon.jpg',
+    avatar: '/icon.png',
     action: 'Commented on your article:',
     articleTitle: "How Taylor Swift's folklore Turned Isolation into Art",
     excerpt:
@@ -13,7 +13,7 @@ export const ADMIN_NOTIFICATIONS = [
   {
     id: 2,
     author: 'Jacob Lash',
-    avatar: '/author-icon.jpg',
+    avatar: '/icon.png',
     action: 'liked your article:',
     articleTitle: "Up: The Beautiful Truth About Life's Real Adventures",
     time: '4 hours ago',

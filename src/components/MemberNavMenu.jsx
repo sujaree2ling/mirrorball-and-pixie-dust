@@ -16,42 +16,55 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { getCurrentUser, logoutUser } from '@/lib/auth'
+import { getAdminNotifications } from '@/lib/adminNotifications'
 import { cn } from '@/lib/utils'
 
 const notifications = [
   {
     id: 1,
     author: 'Thompson P.',
-    avatar: '/author-icon.jpg',
+    avatar: '/icon.png',
     message: 'Published new article.',
     time: '2 hours ago',
+    viewTo: '/post/1',
   },
   {
     id: 2,
     author: 'Jacob Lash',
-    avatar: '/author-icon.jpg',
+    avatar: '/icon.png',
     message: 'Comment on the article you have commented on.',
     time: '12 September 2024 at 18:30',
+    viewTo: '/post/1',
   },
 ]
 
-const adminNotifications = [
-  {
-    id: 1,
-    author: 'Jacob Lash',
-    avatar: '/author-icon.jpg',
-    message: 'Commented on your article.',
-    time: '4 hours ago',
-  },
-]
+function getDropdownNotifications(isAdmin) {
+  if (!isAdmin) return notifications
+
+  return getAdminNotifications().map((notification) => ({
+    id: notification.id,
+    author: notification.author,
+    avatar: notification.avatar,
+    message: notification.action.replace(/:$/, '.'),
+    time: notification.time,
+    viewTo: notification.viewTo,
+  }))
+}
 
 function NotificationList({ items }) {
+  const navigate = useNavigate()
+
   return (
     <>
       {items.map((notification) => (
         <DropdownMenuItem
           key={notification.id}
           className="cursor-pointer rounded-lg p-3 focus:bg-[#EFEEEB]"
+          onSelect={() => {
+            if (notification.viewTo) {
+              navigate(notification.viewTo)
+            }
+          }}
         >
           <div className="flex w-full gap-3">
             <img
@@ -74,7 +87,7 @@ function NotificationList({ items }) {
 }
 
 export function MemberNotificationMenu({ className, isAdmin = false }) {
-  const items = isAdmin ? adminNotifications : notifications
+  const items = getDropdownNotifications(isAdmin)
 
   return (
     <DropdownMenu>
@@ -194,7 +207,7 @@ export function MemberMobileMenuPanel({
         <AccountMenuItems
           onLogout={onLogout}
           onItemClick={onNavigate}
-          showAdminPanel={false}
+          showAdminPanel={isAdmin}
           itemClassName="px-6 py-4"
         />
       </nav>
@@ -213,7 +226,7 @@ export function MemberNavMenu({ user, onLogout, showAdminPanel = true }) {
 
   return (
     <div className="hidden items-center gap-3 lg:flex">
-      <MemberNotificationMenu />
+      <MemberNotificationMenu isAdmin={showAdminPanel} />
 
       <DropdownMenu>
         <DropdownMenuTrigger

@@ -23,7 +23,8 @@ export function ProfilePage() {
     email: currentUser?.email ?? '',
     bio: currentUser?.bio ?? '',
   })
-  const [avatar, setAvatar] = useState(currentUser?.avatar ?? '/author-icon.jpg')
+  const [avatar, setAvatar] = useState(currentUser?.avatar ?? '/icon.png')
+  const [avatarFile, setAvatarFile] = useState(null)
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -43,13 +44,27 @@ export function ProfilePage() {
     const file = event.target.files?.[0]
     if (!file) return
 
-    const reader = new FileReader()
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        setAvatar(reader.result)
-      }
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+    if (!allowedTypes.includes(file.type)) {
+      setErrors((prev) => ({
+        ...prev,
+        avatar: 'Please upload a valid image file (JPEG, PNG, GIF, WebP).',
+      }))
+      return
     }
-    reader.readAsDataURL(file)
+
+    const maxSize = 5 * 1024 * 1024
+    if (file.size > maxSize) {
+      setErrors((prev) => ({
+        ...prev,
+        avatar: 'The file is too large. Please upload an image smaller than 5MB.',
+      }))
+      return
+    }
+
+    setAvatarFile(file)
+    setAvatar(URL.createObjectURL(file))
+    setErrors((prev) => ({ ...prev, avatar: undefined }))
   }
 
   const handleSubmit = async (event) => {
@@ -68,12 +83,15 @@ export function ProfilePage() {
         return
       }
 
-      updateUserProfile({
+      const updatedUser = await updateUserProfile({
         name: form.name,
         username: form.username,
-        avatar,
         bio: form.bio,
+        imageFile: avatarFile,
       })
+
+      setAvatar(updatedUser.avatar)
+      setAvatarFile(null)
 
       toast.success('Saved profile', {
         description: 'Your profile has been successfully updated.',
@@ -83,7 +101,13 @@ export function ProfilePage() {
       const message = error.message?.toLowerCase() ?? ''
 
       if (message.includes('username')) {
-        setErrors({ username: 'Username is already taken, please try another username.' })
+        setErrors({
+          username: 'Username is already taken, please try another username.',
+        })
+      } else {
+        toast.error('Failed to save profile', {
+          description: error.message || 'Please try again.',
+        })
       }
     } finally {
       setIsSubmitting(false)
@@ -128,6 +152,9 @@ export function ProfilePage() {
           >
             Upload profile picture
           </button>
+          {errors.avatar && (
+            <p className="text-sm text-[#EB5164]">{errors.avatar}</p>
+          )}
         </div>
 
         <div className="hidden flex-col items-start gap-5 border-b border-[#DAD6D1] pb-8 lg:flex lg:flex-row lg:items-center">
@@ -136,13 +163,18 @@ export function ProfilePage() {
             alt={form.name}
             className="h-24 w-24 rounded-full object-cover"
           />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="cursor-pointer rounded-full border border-[#26231E] bg-white px-5 py-2 text-[15px] font-medium text-[#26231E] transition-opacity hover:opacity-85"
-          >
-            Upload profile picture
-          </button>
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="cursor-pointer rounded-full border border-[#26231E] bg-white px-5 py-2 text-[15px] font-medium text-[#26231E] transition-opacity hover:opacity-85"
+            >
+              Upload profile picture
+            </button>
+            {errors.avatar && (
+              <p className="text-sm text-[#EB5164]">{errors.avatar}</p>
+            )}
+          </div>
         </div>
 
         <div className="mt-6 flex flex-col gap-5 lg:mt-8 lg:max-w-[520px] lg:gap-6">

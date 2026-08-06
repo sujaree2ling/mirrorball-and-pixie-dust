@@ -9,7 +9,6 @@ import {
   fetchAllAdminPosts,
   invalidateAdminPostsCache,
 } from '@/lib/adminPostsCache'
-import { getCurrentUser } from '@/lib/auth'
 
 const LEGACY_LOCAL_KEYS = [
   'admin_local_articles',
@@ -37,7 +36,7 @@ function normalizeArticle(article) {
     category: resolveCategoryName(article.category ?? DEFAULT_CATEGORY),
     image: article.image ?? '',
     imagePosition: article.imagePosition ?? article.image_position ?? 'center',
-    author: article.author ?? getCurrentUser()?.name ?? 'Admin',
+    author: article.author || 'Sujaree S.',
     date: article.date ?? new Date().toISOString(),
     likes: article.likes ?? 0,
     status: article.status ?? 'published',
@@ -106,20 +105,27 @@ export async function getAdminArticle(id) {
   }
 }
 
-export async function createArticle(payload) {
-  const post = await createPost({
-    ...payload,
-    author: payload.author || getCurrentUser()?.name || 'Admin',
-  })
+export async function createArticle(payload, imageFile) {
+  const post = await createPost(
+    {
+      ...payload,
+      author: payload.author || 'Sujaree S.',
+    },
+    imageFile,
+  )
   invalidateAdminPostsCache()
   return normalizeArticle(post)
 }
 
-export async function updateArticle(id, payload) {
-  const post = await updatePost(id, {
-    ...payload,
-    author: payload.author || getCurrentUser()?.name || 'Admin',
-  })
+export async function updateArticle(id, payload, imageFile) {
+  const post = await updatePost(
+    id,
+    {
+      ...payload,
+      author: payload.author || 'Sujaree S.',
+    },
+    imageFile,
+  )
   invalidateAdminPostsCache()
   return normalizeArticle(post)
 }

@@ -11,7 +11,13 @@ import {
 } from 'lucide-react'
 
 import { NavBar } from '@/components/NavBar'
-import { getCurrentUser, logoutUser } from '@/lib/auth'
+import { AdminOnlyPage } from '@/pages/AdminOnlyPage'
+import {
+  getCurrentUser,
+  isAdmin,
+  logoutUser,
+  refreshCurrentUser,
+} from '@/lib/auth'
 import { cn } from '@/lib/utils'
 
 const adminNavLinks = [
@@ -78,7 +84,7 @@ function AdminSidebar({ activePage, onLogout }) {
           to="/"
           className="text-[22px] font-bold leading-none tracking-[-0.5px] text-[#26231E] no-underline"
         >
-          hh<span className="text-[#12B279]">.</span>
+          LingLingS<span className="text-[#12B279]">.</span>
         </Link>
         <span className="text-sm font-bold text-[#F2B68C]">Admin panel</span>
       </div>
@@ -111,7 +117,7 @@ function AdminSidebar({ activePage, onLogout }) {
           className="flex w-full items-center gap-3 px-6 py-3 text-sm font-medium text-[#75716B] no-underline transition-colors hover:bg-[#DAD6D1]/40 hover:text-[#26231E]"
         >
           <ExternalLink size={16} strokeWidth={1.75} />
-          hh. website
+          LingLingS website
         </Link>
         <button
           type="button"
@@ -139,11 +145,30 @@ export function AdminPanelLayout({
   const [user, setUser] = useState(() => getCurrentUser())
 
   useEffect(() => {
-    setUser(getCurrentUser())
+    let cancelled = false
+
+    async function syncUser() {
+      const freshUser = await refreshCurrentUser()
+      if (!cancelled) setUser(freshUser)
+    }
+
+    syncUser()
+
+    return () => {
+      cancelled = true
+    }
   }, [location.pathname, location.state])
 
   if (!user) {
     return <Navigate to="/login" replace />
+  }
+
+  const isSettings = variant === 'settings'
+  const userIsAdmin = isAdmin(user)
+
+  // Admin pages require the admin email — never trust a stale local role alone
+  if (!isSettings && !userIsAdmin) {
+    return <AdminOnlyPage />
   }
 
   const handleLogout = () => {
@@ -151,21 +176,26 @@ export function AdminPanelLayout({
     navigate('/')
   }
 
-  const isSettings = variant === 'settings'
-
   return (
     <div className="flex min-h-screen w-full flex-col bg-[#F9F8F6] lg:bg-white">
-      <div className="lg:hidden">
+      <div className={cn(userIsAdmin && 'lg:hidden')}>
         <NavBar />
         {isSettings && <SettingsTabs activePage={activePage} />}
         {isSettings && <UserPageHeader user={user} title={title} />}
       </div>
 
       <div className="flex min-h-0 flex-1">
-        <AdminSidebar activePage={activePage} onLogout={handleLogout} />
+        {userIsAdmin && (
+          <AdminSidebar activePage={activePage} onLogout={handleLogout} />
+        )}
 
         <main className="min-w-0 flex-1 bg-[#F9F8F6] lg:bg-white">
-          <div className="hidden items-center justify-between gap-4 border-b border-[#DAD6D1] px-12 py-8 lg:flex">
+          <div
+            className={cn(
+              'items-center justify-between gap-4 border-b border-[#DAD6D1] px-12 py-8',
+              userIsAdmin ? 'hidden lg:flex' : 'hidden',
+            )}
+          >
             <h1 className="text-2xl font-bold text-[#26231E]">{title}</h1>
             {headerAction}
           </div>

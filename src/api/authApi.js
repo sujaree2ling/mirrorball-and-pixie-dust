@@ -49,3 +49,20 @@ export async function resetPassword({ oldPassword, newPassword }) {
     throw new Error(getErrorMessage(error, 'Failed to reset password'))
   }
 }
+
+export async function updateProfile({ name, username }, imageFile) {
+  try {
+    const formData = new FormData()
+    formData.append('name', name)
+    formData.append('username', username)
+
+    if (imageFile) {
+      formData.append('imageFile', imageFile)
+    }
+
+    const response = await axios.put(`${BASE_URL}/auth/profile`, formData)
+    return response.data
+  } catch (error) {
+    throw new Error(getErrorMessage(error, 'Failed to update profile'))
+  }
+}

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ImageIcon, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 import {
   AlertDialog,
@@ -29,10 +30,10 @@ import {
   getArticleCategories,
   updateArticle,
 } from '@/lib/adminArticles'
-import { getCurrentUser } from '@/lib/auth'
 import { cn } from '@/lib/utils'
 
 const INTRO_MAX_LENGTH = 120
+const BLOG_AUTHOR = 'Sujaree S.'
 
 const emptyForm = {
   title: '',
@@ -41,6 +42,7 @@ const emptyForm = {
   category: '',
   image: '',
   imagePosition: 'center',
+  author: BLOG_AUTHOR,
 }
 
 export function AdminArticleFormPage({ mode = 'create' }) {
@@ -48,10 +50,10 @@ export function AdminArticleFormPage({ mode = 'create' }) {
   const { id } = useParams()
   const fileInputRef = useRef(null)
   const isEdit = mode === 'edit'
-  const authorName = getCurrentUser()?.name ?? ''
 
   const [articleCategories, setArticleCategories] = useState([])
   const [form, setForm] = useState(emptyForm)
+  const [imageFile, setImageFile] = useState(null)
   const [articleStatus, setArticleStatus] = useState('draft')
   const [errors, setErrors] = useState({})
   const [isLoading, setIsLoading] = useState(true)
@@ -109,6 +111,7 @@ export function AdminArticleFormPage({ mode = 'create' }) {
           category: article.category,
           image: article.image,
           imagePosition: article.imagePosition ?? 'center',
+          author: BLOG_AUTHOR,
         })
         setArticleStatus(article.status)
       } catch (error) {
@@ -139,14 +142,30 @@ export function AdminArticleFormPage({ mode = 'create' }) {
     const file = event.target.files?.[0]
     if (!file) return
 
-    const reader = new FileReader()
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        setForm((prev) => ({ ...prev, image: reader.result }))
-        setErrors((prev) => ({ ...prev, image: undefined }))
-      }
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+    if (!allowedTypes.includes(file.type)) {
+      setErrors((prev) => ({
+        ...prev,
+        image: 'Please upload a valid image file (JPEG, PNG, GIF, WebP).',
+      }))
+      return
     }
-    reader.readAsDataURL(file)
+
+    const maxSize = 5 * 1024 * 1024
+    if (file.size > maxSize) {
+      setErrors((prev) => ({
+        ...prev,
+        image: 'The file is too large. Please upload an image smaller than 5MB.',
+      }))
+      return
+    }
+
+    setImageFile(file)
+    setForm((prev) => ({
+      ...prev,
+      image: URL.createObjectURL(file),
+    }))
+    setErrors((prev) => ({ ...prev, image: undefined }))
   }
 
   const validateForm = () => {
@@ -156,7 +175,9 @@ export function AdminArticleFormPage({ mode = 'create' }) {
     if (!form.description.trim()) nextErrors.description = 'Introduction is required'
     if (!form.content.trim()) nextErrors.content = 'Content is required'
     if (!form.category) nextErrors.category = 'Category is required'
-    if (!form.image.trim()) nextErrors.image = 'Thumbnail image is required'
+    if (!imageFile && !form.image.trim()) {
+      nextErrors.image = 'Thumbnail image is required'
+    }
 
     return nextErrors
   }
@@ -174,14 +195,19 @@ export function AdminArticleFormPage({ mode = 'create' }) {
     try {
       const payload = {
         ...form,
-        author: authorName,
+        author: BLOG_AUTHOR,
         status: nextStatus,
       }
 
+      // Don't send blob: preview URLs to the API — only real image URLs or a new file
+      if (imageFile) {
+        payload.image = undefined
+      }
+
       if (isEdit) {
-        await updateArticle(id, payload)
+        await updateArticle(id, payload, imageFile)
       } else {
-        await createArticle(payload)
+        await createArticle(payload, imageFile)
       }
 
       const isPublished = nextStatus === 'published'
@@ -206,6 +232,13 @@ export function AdminArticleFormPage({ mode = 'create' }) {
       })
     } catch (error) {
       console.error('Error saving article:', error)
+      toast.error('Failed to save article', {
+        description:
+          error.response?.data?.error ||
+          error.response?.data?.message ||
+          error.message ||
+          'Please try again.',
+      })
     } finally {
       setIsSubmitting(false)
       setSubmittingAs(null)
@@ -227,6 +260,13 @@ export function AdminArticleFormPage({ mode = 'create' }) {
       })
     } catch (error) {
       console.error('Error deleting article:', error)
+      toast.error('Failed to delete article', {
+        description:
+          error.response?.data?.error ||
+          error.response?.data?.message ||
+          error.message ||
+          'Please try again.',
+      })
     }
   }
 
@@ -361,7 +401,7 @@ export function AdminArticleFormPage({ mode = 'create' }) {
             id="author"
             name="author"
             label="Author name"
-            value={authorName}
+            value={form.author}
             readOnly
             disabled
             size="admin"
