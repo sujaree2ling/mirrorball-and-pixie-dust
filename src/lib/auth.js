@@ -73,10 +73,10 @@ export async function loginUser({ email, password }) {
   })
 
   const token = loginData.access_token
-  const apiUser = await fetchUserFromApi(token)
-  const user = normalizeUser(apiUser)
-
   saveToken(token)
+
+  const apiUser = await fetchUserFromApi()
+  const user = normalizeUser(apiUser)
   saveCurrentUser(user)
 
   return {
@@ -90,7 +90,7 @@ export async function refreshCurrentUser() {
   if (!token) return null
 
   try {
-    const apiUser = await fetchUserFromApi(token)
+    const apiUser = await fetchUserFromApi()
     const user = normalizeUser(apiUser)
     saveCurrentUser(user)
     return user
@@ -117,11 +117,10 @@ export function updateUserProfile({ name, username, avatar, bio }) {
 }
 
 export async function resetUserPassword({ currentPassword, newPassword }) {
-  const token = getToken()
-  if (!token) throw new Error('Not logged in')
+  if (!getToken()) throw new Error('Not logged in')
 
   try {
-    await resetPasswordWithApi(token, {
+    await resetPasswordWithApi({
       oldPassword: currentPassword,
       newPassword,
     })
