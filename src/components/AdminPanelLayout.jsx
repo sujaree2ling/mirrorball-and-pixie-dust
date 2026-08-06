@@ -164,10 +164,9 @@ export function AdminPanelLayout({
   }
 
   const isSettings = variant === 'settings'
-  const userIsAdmin = isAdmin(user)
 
-  // Admin pages require the admin email — never trust a stale local role alone
-  if (!isSettings && !userIsAdmin) {
+  // Non-admins can open Profile / Reset password, but other admin pages show Admin only
+  if (!isSettings && !isAdmin(user)) {
     return <AdminOnlyPage />
   }
 
@@ -178,24 +177,17 @@ export function AdminPanelLayout({
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-[#F9F8F6] lg:bg-white">
-      <div className={cn(userIsAdmin && 'lg:hidden')}>
+      <div className="lg:hidden">
         <NavBar />
         {isSettings && <SettingsTabs activePage={activePage} />}
         {isSettings && <UserPageHeader user={user} title={title} />}
       </div>
 
       <div className="flex min-h-0 flex-1">
-        {userIsAdmin && (
-          <AdminSidebar activePage={activePage} onLogout={handleLogout} />
-        )}
+        <AdminSidebar activePage={activePage} onLogout={handleLogout} />
 
         <main className="min-w-0 flex-1 bg-[#F9F8F6] lg:bg-white">
-          <div
-            className={cn(
-              'items-center justify-between gap-4 border-b border-[#DAD6D1] px-12 py-8',
-              userIsAdmin ? 'hidden lg:flex' : 'hidden',
-            )}
-          >
+          <div className="hidden items-center justify-between gap-4 border-b border-[#DAD6D1] px-12 py-8 lg:flex">
             <h1 className="text-2xl font-bold text-[#26231E]">{title}</h1>
             {headerAction}
           </div>
