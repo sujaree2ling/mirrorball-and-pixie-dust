@@ -4,6 +4,7 @@ import { NavBar } from './components/NavBar'
 import { HeroSection } from './components/HeroSection'
 import { Footer } from './components/Footer'
 import { ArticleSection } from './components/ArticleSection'
+import { ChatWidget } from './components/ChatWidget'
 import { ViewPostPage } from './pages/ViewPostPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { LoginPage } from './pages/LoginPage'
@@ -47,6 +48,7 @@ function App() {
         <Route path="/post/:id" element={<ViewPostPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
+      <ChatWidget />
     </div>
   )
 }
