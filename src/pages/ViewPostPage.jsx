@@ -134,7 +134,7 @@ export function ViewPostPage() {
 
         <PostContent content={post.content} />
 
-        <PostInteractions likes={post.likes} />
+        <PostInteractions postId={post.id} likes={post.likes} />
       </main>
       <Footer />
     </>

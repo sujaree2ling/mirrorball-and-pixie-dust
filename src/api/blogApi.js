@@ -24,6 +24,28 @@ export async function getPost(id) {
   return response.data
 }
 
+export async function getPostComments(postId) {
+  const response = await axios.get(`${BASE_URL}/posts/${postId}/comments`)
+  return response.data.comments ?? []
+}
+
+export async function createPostComment(postId, content) {
+  const response = await axios.post(`${BASE_URL}/posts/${postId}/comments`, {
+    content,
+  })
+  return response.data.comment
+}
+
+export async function getPostLikeStatus(postId) {
+  const response = await axios.get(`${BASE_URL}/posts/${postId}/like`)
+  return response.data
+}
+
+export async function togglePostLike(postId) {
+  const response = await axios.post(`${BASE_URL}/posts/${postId}/like`)
+  return response.data
+}
+
 function toFormData(payload, imageFile) {
   const formData = new FormData()
 
