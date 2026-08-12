@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Copy, X } from 'lucide-react'
 import { toast } from 'sonner'
@@ -9,44 +9,29 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { getCurrentUser, isLoggedIn } from '@/lib/auth'
-
-const INITIAL_COMMENTS = [
-  {
-    id: 1,
-    author: 'Jacob Lash',
-    avatar: '/icon.png',
-    date: '12 September 2024 at 18:30',
-    content:
-      'I loved this article! It really captures how independent yet loving cats can be. The purring section was super interesting.',
-  },
-  {
-    id: 2,
-    author: 'Ahri',
-    avatar: '/icon.png',
-    date: '12 September 2024 at 18:30',
-    content:
-      "Such a great read. I've always wondered how cat slow blinks work as a sign of trust — this explained it perfectly.",
-  },
-  {
-    id: 3,
-    author: 'Mimi mama',
-    avatar: '/icon.png',
-    date: '12 September 2024 at 18:30',
-    content:
-      'Appreciated the section on cat purring and how it could help with healing. Definitely sharing this with friends who have cats!',
-  },
-]
+import {
+  createPostComment,
+  getPostComments,
+  getPostLikeStatus,
+  togglePostLike,
+} from '@/api/blogApi'
+import { isLoggedIn } from '@/lib/auth'
 
 function formatCommentDate(date = new Date()) {
-  return date.toLocaleString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).replace(',', ' at')
+  const value = date instanceof Date ? date : new Date(date)
+
+  if (Number.isNaN(value.getTime())) return ''
+
+  return value
+    .toLocaleString('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    })
+    .replace(',', ' at')
 }
 
 function LikeIcon() {
@@ -96,13 +81,52 @@ function XIcon({ size = 16 }) {
   )
 }
 
-export function PostInteractions({ likes = 0 }) {
+export function PostInteractions({ postId, likes = 0 }) {
   const navigate = useNavigate()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [liked, setLiked] = useState(false)
   const [likeCount, setLikeCount] = useState(likes)
   const [commentText, setCommentText] = useState('')
-  const [comments, setComments] = useState(INITIAL_COMMENTS)
+  const [comments, setComments] = useState([])
+  const [isLoadingComments, setIsLoadingComments] = useState(true)
+  const [isSending, setIsSending] = useState(false)
+  const [isTogglingLike, setIsTogglingLike] = useState(false)
+
+  useEffect(() => {
+    if (!postId) return
+
+    let cancelled = false
+
+    async function loadInteractions() {
+      setIsLoadingComments(true)
+
+      try {
+        const [commentList, likeStatus] = await Promise.all([
+          getPostComments(postId),
+          getPostLikeStatus(postId),
+        ])
+
+        if (cancelled) return
+
+        setComments(commentList)
+        setLiked(Boolean(likeStatus.liked))
+        setLikeCount(likeStatus.likes ?? likes)
+      } catch (error) {
+        console.error('Failed to load interactions:', error)
+        if (!cancelled) {
+          toast.error('Failed to load comments')
+        }
+      } finally {
+        if (!cancelled) setIsLoadingComments(false)
+      }
+    }
+
+    loadInteractions()
+
+    return () => {
+      cancelled = true
+    }
+  }, [postId, likes])
 
   const requireLogin = () => {
     if (!isLoggedIn()) {
@@ -122,25 +146,28 @@ export function PostInteractions({ likes = 0 }) {
     navigate('/login')
   }
 
-  const handleLike = () => {
-    if (requireLogin()) return
+  const handleLike = async () => {
+    if (requireLogin() || isTogglingLike || !postId) return
 
-    if (liked) {
-      setLiked(false)
-      setLikeCount((count) => Math.max(0, count - 1))
-      return
+    setIsTogglingLike(true)
+
+    try {
+      const result = await togglePostLike(postId)
+      setLiked(Boolean(result.liked))
+      setLikeCount(result.likes ?? 0)
+    } catch (error) {
+      toast.error(error.response?.data?.error || error.message || 'Failed to like')
+    } finally {
+      setIsTogglingLike(false)
     }
-
-    setLiked(true)
-    setLikeCount((count) => count + 1)
   }
 
   const handleCommentInteraction = () => {
     requireLogin()
   }
 
-  const handleSend = () => {
-    if (requireLogin()) return
+  const handleSend = async () => {
+    if (requireLogin() || isSending || !postId) return
 
     const content = commentText.trim()
     if (!content) {
@@ -148,18 +175,20 @@ export function PostInteractions({ likes = 0 }) {
       return
     }
 
-    const user = getCurrentUser()
-    const newComment = {
-      id: Date.now(),
-      author: user?.name || user?.username || 'User',
-      avatar: user?.avatar || '/icon.png',
-      date: formatCommentDate(),
-      content,
-    }
+    setIsSending(true)
 
-    setComments((prev) => [newComment, ...prev])
-    setCommentText('')
-    toast.success('Comment posted')
+    try {
+      const comment = await createPostComment(postId, content)
+      setComments((prev) => [comment, ...prev])
+      setCommentText('')
+      toast.success('Comment posted')
+    } catch (error) {
+      toast.error(
+        error.response?.data?.error || error.message || 'Failed to post comment',
+      )
+    } finally {
+      setIsSending(false)
+    }
   }
 
   const articleUrl = window.location.href
@@ -194,9 +223,10 @@ export function PostInteractions({ likes = 0 }) {
         <button
           type="button"
           onClick={handleLike}
+          disabled={isTogglingLike}
           aria-label={`Like post, ${likeCount} likes`}
           aria-pressed={liked}
-          className={`inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border px-5 py-2.5 text-base font-medium transition-colors sm:w-fit sm:justify-start ${
+          className={`inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border px-5 py-2.5 text-base font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 sm:w-fit sm:justify-start ${
             liked
               ? 'border-[#12B279] bg-[#DCFCE7] text-[#12B279] hover:bg-[#BBF7D0]'
               : 'border-[#26231E] bg-white text-[#26231E] hover:bg-[#FAFAF9]'
@@ -260,45 +290,54 @@ export function PostInteractions({ likes = 0 }) {
           <button
             type="button"
             onClick={handleSend}
-            className="mt-4 cursor-pointer rounded-full border border-[#26231E] bg-[#26231E] px-6 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-85 sm:absolute sm:right-4 sm:bottom-4 sm:mt-0"
+            disabled={isSending}
+            className="mt-4 cursor-pointer rounded-full border border-[#26231E] bg-[#26231E] px-6 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-60 sm:absolute sm:right-4 sm:bottom-4 sm:mt-0"
           >
-            Send
+            {isSending ? 'Sending...' : 'Send'}
           </button>
         </div>
       </section>
 
       <section className="mt-8">
-        <ul className="flex flex-col">
-          {comments.map((comment, index) => (
-            <li
-              key={comment.id}
-              className={
-                index < comments.length - 1
-                  ? 'border-b border-[#DAD6D1] py-6 first:pt-0'
-                  : 'py-6 first:pt-0'
-              }
-            >
-              <div className="flex gap-3">
-                <img
-                  src={comment.avatar}
-                  alt={comment.author}
-                  className="h-10 w-10 shrink-0 rounded-full object-cover"
-                />
-                <div className="flex flex-col gap-2">
-                  <div>
-                    <p className="text-base font-bold text-[#26231E]">
-                      {comment.author}
+        {isLoadingComments ? (
+          <p className="text-sm text-[#75716B]">Loading comments...</p>
+        ) : comments.length === 0 ? (
+          <p className="text-sm text-[#75716B]">No comments yet. Be the first to comment.</p>
+        ) : (
+          <ul className="flex flex-col">
+            {comments.map((comment, index) => (
+              <li
+                key={comment.id}
+                className={
+                  index < comments.length - 1
+                    ? 'border-b border-[#DAD6D1] py-6 first:pt-0'
+                    : 'py-6 first:pt-0'
+                }
+              >
+                <div className="flex gap-3">
+                  <img
+                    src={comment.avatar || '/icon.png'}
+                    alt={comment.author}
+                    className="h-10 w-10 shrink-0 rounded-full object-cover"
+                  />
+                  <div className="flex flex-col gap-2">
+                    <div>
+                      <p className="text-base font-bold text-[#26231E]">
+                        {comment.author}
+                      </p>
+                      <p className="text-sm text-[#75716B]">
+                        {formatCommentDate(comment.date)}
+                      </p>
+                    </div>
+                    <p className="text-base leading-[165%] text-[#43403B]">
+                      {comment.content}
                     </p>
-                    <p className="text-sm text-[#75716B]">{comment.date}</p>
                   </div>
-                  <p className="text-base leading-[165%] text-[#43403B]">
-                    {comment.content}
-                  </p>
                 </div>
-              </div>
-            </li>
-          ))}
-        </ul>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>

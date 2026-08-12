@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 import {
   Bell,
   ChevronDown,
@@ -16,43 +17,19 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { getCurrentUser, logoutUser } from '@/lib/auth'
-import { getAdminNotifications } from '@/lib/adminNotifications'
+import { fetchDropdownNotifications } from '@/lib/adminNotifications'
 import { cn } from '@/lib/utils'
-
-const notifications = [
-  {
-    id: 1,
-    author: 'Thompson P.',
-    avatar: '/icon.png',
-    message: 'Published new article.',
-    time: '2 hours ago',
-    viewTo: '/post/1',
-  },
-  {
-    id: 2,
-    author: 'Jacob Lash',
-    avatar: '/icon.png',
-    message: 'Comment on the article you have commented on.',
-    time: '12 September 2024 at 18:30',
-    viewTo: '/post/1',
-  },
-]
-
-function getDropdownNotifications(isAdmin) {
-  if (!isAdmin) return notifications
-
-  return getAdminNotifications().map((notification) => ({
-    id: notification.id,
-    author: notification.author,
-    avatar: notification.avatar,
-    message: notification.action.replace(/:$/, '.'),
-    time: notification.time,
-    viewTo: notification.viewTo,
-  }))
-}
 
 function NotificationList({ items }) {
   const navigate = useNavigate()
+
+  if (items.length === 0) {
+    return (
+      <p className="px-3 py-6 text-center text-sm text-[#75716B]">
+        No notifications yet
+      </p>
+    )
+  }
 
   return (
     <>
@@ -86,11 +63,29 @@ function NotificationList({ items }) {
   )
 }
 
-export function MemberNotificationMenu({ className, isAdmin = false }) {
-  const items = getDropdownNotifications(isAdmin)
+export function MemberNotificationMenu({ className }) {
+  const [items, setItems] = useState([])
+  const [isLoading, setIsLoading] = useState(false)
+
+  const loadNotifications = async () => {
+    setIsLoading(true)
+    try {
+      const notifications = await fetchDropdownNotifications()
+      setItems(notifications)
+    } catch (error) {
+      console.error('Failed to load notifications:', error)
+      setItems([])
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
-    <DropdownMenu>
+    <DropdownMenu
+      onOpenChange={(open) => {
+        if (open) loadNotifications()
+      }}
+    >
       <DropdownMenuTrigger
         type="button"
         aria-label="Notifications"
@@ -107,7 +102,13 @@ export function MemberNotificationMenu({ className, isAdmin = false }) {
         sideOffset={12}
         className="w-[min(100vw-2rem,400px)] rounded-xl border border-[#DAD6D1] bg-white p-2 shadow-md"
       >
-        <NotificationList items={items} />
+        {isLoading ? (
+          <p className="px-3 py-6 text-center text-sm text-[#75716B]">
+            Loading...
+          </p>
+        ) : (
+          <NotificationList items={items} />
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )
@@ -200,7 +201,7 @@ export function MemberMobileMenuPanel({
           <span className="truncate text-base font-medium text-[#26231E]">{user.name}</span>
         </Link>
 
-        <MemberNotificationMenu isAdmin={isAdmin} />
+        <MemberNotificationMenu />
       </div>
 
       <nav>
@@ -226,7 +227,7 @@ export function MemberNavMenu({ user, onLogout, showAdminPanel = true }) {
 
   return (
     <div className="hidden items-center gap-3 lg:flex">
-      <MemberNotificationMenu isAdmin={showAdminPanel} />
+      <MemberNotificationMenu />
 
       <DropdownMenu>
         <DropdownMenuTrigger
